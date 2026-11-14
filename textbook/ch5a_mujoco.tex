@@ -1,0 +1,58 @@
+\section{仿真教程（一）：MuJoCo}
+
+\subsection{安装与验证}
+\begin{lstlisting}[language=bash]
+pip install mujoco==3.3.7                    # 或 pip install -r requirements-lock.txt
+python -c "import mujoco; print(mujoco.__version__)"
+\end{lstlisting}
+GPU 渲染需要 EGL/OSMesa 之一；纯数值训练与评估不依赖任何 OpenGL 后端（渲染失败不影响训练，只影响回放图）。
+
+\subsection{模型资产}
+\begin{itemize}
+  \item 场景文件：\code{orca\_v2/scene\_right.xml}（含左右手 combined/left 单独场景）；
+  \item 结构：\code{scene\_right.xml} $\to$ include \code{assets/scene.xml + options.xml + mjcf/orcahand\_right(.body).xml}，
+        网格在 \code{assets/} 下；
+  \item 原始来源：官方 \code{orcahand\_description} 仓 v2 目录（本机归档 \code{AHand/1028/}）；
+  \item 官方预览：\code{python -m mujoco.viewer --mjcf=v2/scene\_combined.xml}。
+\end{itemize}
+
+\subsection{手势浏览器 Demo（实测配方）}
+\begin{lstlisting}[language=bash]
+cd AHand/mujoco
+./.venv/Scripts/python.exe serve_demo.py --open        # Windows 原生
+# 浏览器打开 http://127.0.0.1:8767 （不要直接双击 web/index.html）
+\end{lstlisting}
+按键：\code{1/V}=V 手势 · \code{2/O}=OK · \code{0}=张开 · \code{A}=自动交替 · 空格=暂停 · \code{R}=正视。
+纯物理测试（无浏览器）：\code{gesture\_demo.py --test}；端口占用加 \code{--port 8768}。
+
+\subsection{RL 环境加载（本项目 envs/）}
+\begin{lstlisting}[language=python]
+import gymnasium as gym, mujoco
+import envs  # 注册 AitachiFree-v1 / AitachiSeq-v1
+env = gym.make("AitachiSeq-v1")
+obs, info = env.reset(seed=7001)
+print(env.action_space.shape, env.observation_space.shape)   # (16,) (84,)
+\end{lstlisting}
+执行器设定与实机一致的伺服语义：位置执行器 \code{kp=12, kv=0.5}（腕 \code{kp=60, kv=3}），
+物理步长 0.002 s、控制周期 0.02 s（每动作 10 物理步）、隐式快速积分器。
+
+\subsection{常用命令速查}
+\begin{table}[h]\centering
+\caption{MuJoCo 线常用命令}\label{tab:mj-cmd}
+\begin{tabular}{ll}
+\toprule
+目的 & 命令 \\
+\midrule
+原生查看器（模型） & \code{python -m mujoco.viewer --mjcf=scene\_right.xml} \\
+浏览器手势 Demo & \code{serve\_demo.py --open}（127.0.0.1:8767） \\
+无头物理自检 & \code{gesture\_demo.py --test} \\
+RL 冒烟（free 任务） & \code{run\_matrix.py --task free --algo ppo --timesteps 2048} \\
+渲染回放 GIF & \code{MUJOCO\_GL=egl demo.py V --model best\_model.zip} \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{warnbox}
+WSL 里 Vulkan 只枚举到 llvmpipe（软件设备）时，MuJoCo/Isaac 的原生窗口路径不可用；
+用 EGL 离屏或浏览器服务渲染替代。回放失败必须如实记录，不得拿静态图冒充轨迹回放。
+\end{warnbox}

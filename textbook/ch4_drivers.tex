@@ -1,0 +1,55 @@
+\section{驱动安装与上位机}
+
+\subsection{Windows 侧（实机控制线）}
+\begin{enumerate}
+  \item \textbf{USB 转串口驱动}：接入舵机总线转接板后设备管理器出现串口（CP210x/CH340 系列按转接板芯片装驱动），
+       本机为 \textbf{COM3}，波特率 \textbf{1\,000\,000}（HLS 实测配置；官方 STS3215 线可到 3 Mbps）；
+  \item \textbf{FD.exe 上位机}（飞特官方，网盘包 \code{FD.exe} 提取码 juds）：改 ID、调零位/PID、缓动标定、
+        示波器式回读。\textbf{FD 与自研软件互斥占用 COM3}——运行 C++/Python 控制前必须先断开 FD；
+  \item \textbf{AHandNative 原生 C++ 软件}：双击 \code{AHandNative.exe}（免安装，Win32 原生，不需要 Python）。
+        按钮：连接检查 / V / OK / OPEN / 停止卸力 / 打开记录 + 三姿势四档位（加速度/速度/目标电流/扭矩，50--100\%）调优。
+        命令行模式：\code{AHandNative.exe --selftest}（协议自检不开串口）、\code{--inspect}、\code{--run V|OK|OPEN}；
+        从源码构建：\code{build.cmd}（MSVC，含 \code{hand\_cli.cpp} 与 \code{trajectory\_library.h}）；
+  \item \textbf{Python 控制线}（网页三姿势）：\code{hand-control.py} + \code{hand-control.html}，
+        依赖 \code{pyserial}；启动器 \code{启动手势控制.cmd} / \code{启动快速手势.cmd}。
+\end{enumerate}
+
+\begin{warnbox}
+\textbf{安全铁律}：任何异常先"停止并卸力"（寄存器 40 $\to$ 0 并回读确认）；
+若提示卸力未确认，立即断舵机电源。C++ 软件每次动作结束自动 16 轴卸力并读回。
+\end{warnbox}
+
+\subsection{C++ 软件安全护栏（实测档位）}
+\begin{table}[h]\centering
+\caption{AHandNative 四重保护（\code{guard()} 实测阈值）}\label{tab:guards}
+\begin{tabular}{lll}
+\toprule
+护栏 & 阈值 & 动作 \\
+\midrule
+峰值电流 & $|$current$|$ $\ge$ 120 raw & 抛异常立即停 \\
+温度 & $\ge$ 40\,\textdegree C & 抛异常立即停 \\
+电压 & 出 9.6--12.4 V & 抛异常立即停 \\
+静止高电流 & $\ge$77 raw 且 $|$速度$|$$\le$2 持续 500 ms & 切除（防堵转） \\
+无进展 & 误差 $>$20 raw 超 1 s 无收窄 & 切除 \\
+指令合法性 & 位置 50--4050/加速度 1--254/速度 1--600/电流 1--68/扭矩 1--1000 & 拒发 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{WSL Ubuntu 侧（仿真与 RL 训练线）}
+\begin{lstlisting}[language=bash]
+# Ubuntu-22.04（WSL2），复用已验证 venv（torch 2.11.0+cu130 / SB3 2.9.2 / MuJoCo 3.3.7）
+wsl -d Ubuntu-22.04
+cd /mnt/c/Users/ASUS/Desktop/AHand/style1101
+bash scripts/setup_ubuntu.sh          # 离线 wheels 优先安装
+.venv/bin/python -m unittest discover -s tests -v
+\end{lstlisting}
+
+\begin{keybox}
+共享文件 $\neq$ 共享 Python 环境：Windows 实机线（pyserial/原生 EXE）与 WSL 训练线（venv）各自独立，
+互不安装对方依赖。Isaac Sim 用独立 venv \code{\$HOME/isaac\_sim/venv/bin/python}（见第 5.2 章）。
+\end{keybox}
+
+\subsection{快速手势面板}
+\code{fast-gesture-panel.html} 为免安装轻量入口（一键 V/OK/OPEN，经本机 HTTP 控制服务），
+调试现场优先用它，FD 与原生 GUI 留给标定与调优场景。

@@ -1,0 +1,37 @@
+{
+  "runs": 3,
+  "summary": [
+    {
+      "task": "free",
+      "algo": "ppo",
+      "label": "PPO",
+      "seeds": 3,
+      "success_rate": 1.0,
+      "success_rate_std": 0.0,
+      "finish_time": 0.3088,
+      "finish_time_std": 0.005805744281887285,
+      "mean_reward": 19.792588582240768,
+      "mean_reward_std": 0.033643362621055536,
+      "penetration_mean_mm": 0.021036455895208094,
+      "penetration_mean_mm_std": 0.006459366029638886,
+      "penetration_max_mm": 0.43576129428117216,
+      "penetration_max_mm_std": 0.093342224076265,
+      "train_auc": 1.2102135486828771,
+      "train_auc_std": 0.15827654400039196,
+      "steps_to_90": 8333.333333333334,
+      "steps_to_90_std": 1885.6180831641268,
+      "wall_seconds": 363.642512400945,
+      "wall_seconds_std": 8.141068081669047,
+      "clip_frac": null,
+      "clip_frac_std": null,
+      "approx_kl": null,
+      "approx_kl_std": null,
+      "ratio_max": null,
+      "ratio_max_std": null,
+      "espo_stop_frac": null,
+      "espo_stop_frac_std": null,
+      "ppg_aux_kl": null,
+      "ppg_aux_kl_std": null
+    }
+  ]
+}

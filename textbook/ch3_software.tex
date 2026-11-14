@@ -1,0 +1,104 @@
+\section{软件对齐设计}\label{sec:software}
+
+\subsection{四层软件栈}
+Aitachi-Hand 把"同一只手"表达在四个层面，任何动作定义自上而下穿透：
+
+\begin{table}[h]\centering
+\caption{软件栈分层}\label{tab:stack}
+\begin{tabular}{clll}
+\toprule
+层 & 工具 & 角度表示 & 说明 \\
+\midrule
+上位机 & FD.exe（飞特官方） & raw 编码 0--4095 & 改 ID/零位/PID，手动缓动标定 \\
+网页控制 & hand-control.py + HTML & raw 目标 + 档位 & 并行批次（$\le$3 轴）、电流/温度暂停 \\
+原生 GUI & AHandNative.cpp（Win32/C++） & raw + 编译期轨迹库 & 三轴同步 SYNC WRITE、四重保护、参数调优 \\
+仿真/RL & MuJoCo / Isaac Lab（本项目） & rad 关节角 & 训练与评估，导出真机目标 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{关节名 ↔ 舵机 ID ↔ 仿真关节 映射表}
+这是全项目最重要的对齐表（来源：2026-11-11 A$\to$B 位姿差分实测 + 摄像头矫正兜底）：
+
+\begin{table}[h]\centering\small
+\caption{MJCF 关节 ↔ 舵机 ID 映射（ORCA v2 右手）}\label{tab:mjcf-map}
+\begin{tabular}{lllll}
+\toprule
+手指 & MJCF 关节 & 舵机 ID & 实测关节名 & 相对行程 \\
+\midrule
+腕 & \code{right\_wrist} & 0 & 手腕前后摇摆 & $\pm$966 \\
+拇指 & \code{right\_t-abd} & 16 & 一级指根（左右） & $\pm$193 \\
+拇指 & \code{right\_t-cmc} & 13 & 二级指根（上下） & $\pm$57 \\
+拇指 & \code{right\_t-mcp} & 14 & 三级关节（主屈） & $\pm$404 \\
+拇指 & \code{right\_t-pip} & 15 & 指尖关节 & $\pm$868 \\
+食指 & \code{right\_i-abd} & 6 & 左右位移 & $\pm$275 \\
+食指 & \code{right\_i-mcp} & 7 & 二级指根（前后） & $\pm$770 \\
+食指 & \code{right\_i-pip} & 8 & 指尖（前后） & $\pm$1000 \\
+中指 & \code{right\_m-abd} & 5 & 一级指关节（左右） & $\pm$379 \\
+中指 & \code{right\_m-mcp} & 12 & 二级指根（前后） & $\pm$843 \\
+中指 & \code{right\_m-pip} & 4 & 指尖关节 & $\pm$603 \\
+无名指 & \code{right\_r-abd} & 1 & 一级指根（左右） & $\pm$340 \\
+无名指 & \code{right\_r-mcp} & 2 & 二级指根（前后） & $\pm$737 \\
+无名指 & \code{right\_r-pip} & 3 & 中间关节 & $\pm$1157 \\
+小指 & \code{right\_p-abd} & 9 & 一级指根（左右） & $\pm$391 \\
+小指 & \code{right\_p-mcp} & 10 & 二级指根（前后） & $\pm$747 \\
+小指 & \code{right\_p-pip} & 11 & 指尖关节 & $\pm$482 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{角度换算公式}
+每轴线性映射（符号方向由 A/B 位姿差分确定）：
+\begin{equation}
+q_i \;=\; s_i \cdot \frac{\mathrm{raw}_i - \mathrm{center}_i}{\mathrm{max}_i - \mathrm{min}_i}\cdot \Delta q_i^{\max},
+\qquad
+\mathrm{raw}_i \;=\; \mathrm{center}_i + s_i \cdot \frac{q_i}{\Delta q_i^{\max}}\cdot (\mathrm{max}_i - \mathrm{min}_i)
+\end{equation}
+其中 $\Delta q_i^{\max}$ 取 MJCF 该关节限位范围 \code{jnt\_range}，$s_i \in \{+1,-1\}$ 为方向符号。
+实操顺序：仿真侧用 MJCF 关节限位归一化；真机侧以三个锚点位姿（V/OK/OPEN 的 raw 目标表）做最小二乘定标，
+再以摄像头指尖跟踪矫正残差（\code{deploy/camera\_align.py}）。
+
+\subsection{三个锚点位姿（raw 目标，实测已验证）}
+\begin{table}[h]\centering\small
+\caption{锚点位姿 raw 目标（容差 $\pm$20；A=张开/回正，B=V 型）}\label{tab:poses}
+\begin{tabular}{lrrrrrrrrrrrrrrrr}
+\toprule
+姿 & \multicolumn{16}{c}{舵机 ID 1--16 raw 目标} \\
+势 & 1&2&3&4&5&6&7&8&9&10&11&12&13&14&15&16 \\
+\midrule
+A & 1899&1970&2000&1419&1966&2142&2308&1846&2437&2021&1963&2237&2181&2047&1906&1904 \\
+B & 1899&1318&907&1419&1966&2142&2308&1846&2437&2774&2510&2237&2095&488&1715&1969 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+配套档位（三姿势共用，实测安全值）：加速度 200 · 速度 200 · 目标电流 200（软件电流暂停阈值）·
+扭矩 200 · 温度暂停 50 · 到位容差 20 · 并行上限 3 轴。
+
+\subsection{系统数据流总图}
+
+\begin{center}
+\begin{tikzpicture}[node distance=9mm,
+  box/.style={draw=keygreen,fill=soft,rounded corners=2pt,align=center,inner sep=5pt,font=\small},
+  hw/.style={draw=warn,fill=warn!6,rounded corners=2pt,align=center,inner sep=5pt,font=\small},
+  arrow/.style={-{Stealth[length=2.5mm]},thick}]
+  \node[box] (fd) {FD.exe 上位机\\标定/改号};
+  \node[box,right=of fd] (cal) {AHand-calibration.json\\17 轴限位/中心};
+  \node[box,right=of cal] (pose) {锚点位姿表\\A/B raw 目标};
+  \node[box,below=of cal] (cpp) {AHandNative C++\\SYNC WRITE 轨迹库};
+  \node[box,left=of cpp] (web) {hand-control.py\\网页三轴并行};
+  \node[box,right=of cpp] (sim) {MuJoCo / Isaac Lab\\rad 关节角};
+  \node[box,below=of sim] (rl) {RL 双任务\\PPO/TD3/SAC$\cdots$};
+  \node[hw,below=of rl] (real) {实机 COM3 @1 Mbps\\17 舵机};
+  \draw[arrow] (fd)--(cal); \draw[arrow] (cal)--(pose);
+  \draw[arrow] (cal)--(web); \draw[arrow] (cal)--(cpp); \draw[arrow] (pose)--(cpp);
+  \draw[arrow] (sim)--(rl); \draw[arrow] (rl) to[bend left=18] node[right,font=\scriptsize]{导出轨迹+分段回放} (real);
+  \draw[arrow] (cpp)--(real); \draw[arrow] (web) to[bend right=12] (real);
+  \draw[arrow,gray,dashed] (real) to[bend right=28] node[below,font=\scriptsize]{电流/温度/位置回读护栏} (cpp);
+\end{tikzpicture}
+\end{center}
+
+\begin{keybox}
+\textbf{对齐验收}：同一动作的实机 raw 曲线与仿真 rad 曲线（换算后）叠加对比；
+先单轴叠加，再多指并行，再验回位误差与指尖几何（V 分指 $\ge$30 mm、OK 拇食指距 $\le$10 mm）。
+\end{keybox}

@@ -1,0 +1,68 @@
+\section{硬件安装与标定}
+
+\subsection{装配流程（官方口径 $\le$ 8 小时）}
+\begin{enumerate}
+  \item \textbf{打印/机加工备料}：PLA 结构件（或直接 Prints-1100.3mf 成品板）、TPU 皮肤/硅胶浇注件、
+        06\_CNC 2 件机加工、轴承与 M4 螺丝按 BOM；
+  \item \textbf{指节装配}（01\_Fingers 32 件）：滚动接触关节对合 → 销钉固定 → 穿 0.4 mm 鱼线双腱；
+  \item \textbf{腱路布设}：PTFE 管按 \code{ASSEMBLY\_ADDENDUM.md} 裁长，绕线轮预绕线，保持屈/伸两腱张力一致；
+  \item \textbf{腕与掌座}（02\_Carpals 12 / 03\_Wrist 14 / 04\_ForeArm 26）；
+  \item \textbf{舵机入位}：16 $\times$ HLS2915 进指/掌电机板位，HLS3930 进腕位；
+  \item \textbf{电气}：单总线菊花链（注意终端匹配与共地），12 V 供电（实测工作区间 9.6--12.4 V）；
+  \item \textbf{皮肤}：TPU 直打件热装或硅胶件浇注后套装。
+\end{enumerate}
+
+\subsection{舵机 ID 分配（关键工序）}
+装柜前用 FD.exe 把 17 个舵机逐个改好 ID（1--16 手指 + 0 腕），\textbf{先单舵机接 USB 改号再上总线}，
+避免同 ID 冲突。本机最终 ID--关节分配以实测位姿差分验证（表~\ref{tab:axis-map}）。
+
+\subsection{逐轴行程标定}
+标定目标：为每个轴记录 \textbf{min\_raw / center\_raw / max\_raw}，作为（a）安全限位、（b）角度换算基准、
+（c）RL 目标合法性检查的依据。本机标定方法（FD.exe + 手动缓动，2026-11-10/11）：
+
+\begin{enumerate}
+  \item FD.exe 连接 COM3，回中全手（零位偏移寄存器不动）；
+  \item 对轴 $i$ 缓慢推向两个机械极限，记录观测 \texttt{observed\_min/max\_raw}；
+  \item 取内缩 50 raw 作安全限位：\texttt{min\_raw = observed\_min+50}, \texttt{max\_raw = observed\_max−50}；
+  \center 值 = 观测区间中点（floor 取整）；相对坐标 \texttt{relative = raw − center\_raw}；
+  \item 每轴 $\ge$ 7 个采样点入档（\code{AHand-calibration.json}，来源 CSV 在 \code{cli/sessions/}）。
+\end{enumerate}
+
+\begin{table}[h]\centering\small
+\caption{17 轴标定总表（实测，2026-11）}\label{tab:axis-map}
+\begin{tabular}{rllrrrrr}
+\toprule
+ID & 手指 & 机械关节（实测名） & min & center & max & rel 区间 & 采样 \\
+\midrule
+0 & 腕 & 手腕前后摇摆 & 891 & 1857 & 2823 & $\pm$966 & 11 \\
+1 & 无名指 & 一级指根（左右） & 1802 & 2142 & 2483 & $\pm$340 & 11 \\
+2 & 无名指 & 二级指根（前后） & 784 & 1521 & 2259 & $\pm$737 & 11 \\
+3 & 无名指 & 中间关节 & 609 & 1766 & 2924 & $\pm$1157 & 9 \\
+4 & 中指 & 指尖关节 & 1053 & 1656 & 2260 & $\pm$603 & 10 \\
+5 & 中指 & 一级指关节（左右） & 1637 & 2016 & 2396 & $\pm$379 & 11 \\
+6 & 食指 & 左右位移关节 & 1651 & 1926 & 2201 & $\pm$275 & 7 \\
+7 & 食指 & 二级指根（前后） & 1735 & 2505 & 3276 & $\pm$770 & 8 \\
+8 & 食指 & 指尖关节（前后） & 1153 & 2153 & 3153 & $\pm$1000 & 12 \\
+9 & 小指 & 一级指根（左右摇摆） & 1666 & 2057 & 2448 & $\pm$391 & 10 \\
+10 & 小指 & 二级指根（前后） & 1730 & 2477 & 3225 & $\pm$747 & 12 \\
+11 & 小指 & 指尖关节 & 2189 & 2671 & 3153 & $\pm$482 & 12 \\
+12 & 中指 & 二级指根（前后） & 1624 & 2467 & 3310 & $\pm$843 & 12 \\
+13 & 拇指 & 二级指根（上下） & 2232 & 2289 & 2346 & $\pm$57 & 23 \\
+14 & 拇指 & 三级关节（主屈轴） & 1304 & 1708 & 2112 & $\pm$404 & 21 \\
+15 & 拇指 & 指尖关节 & 1125 & 1993 & 2861 & $\pm$868 & 22 \\
+16 & 拇指 & 一级指根（左右） & 1899 & 2092 & 2286 & $\pm$193 & 156 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{warnbox}
+\textbf{ID13 行程极窄（$\pm$57 raw）且采样 23 次}——该轴有既有机械阻力史；ID16 采样 156 次为复测轴。
+14 号轴为拇指主屈轴（全行程约 1700 raw）。凡遇轴异常，先查腱张力与 PTFE 管走向，再查电流/温度。
+\end{warnbox}
+
+\subsection{验收基准}
+\begin{itemize}
+  \item 全轴 \textbf{卸力回读}：寄存器 40 写 0 后读回必须为 0（未确认=断电处理）；
+  \item 三手势编码器到位容差 \textbf{$\pm$20 raw}；轨迹回放允许一次 $\le$40 raw 末端补正；
+  \item 安全护栏：峰值电流 < 120 raw、温度 < 40\,\textdegree C、电压 9.6--12.4 V、停滞/静止高电流 500 ms 内切除。
+\end{itemize}

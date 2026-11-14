@@ -37,9 +37,13 @@ def reward_curve_metrics(episodes_path: Path):
     k = min(50, len(rew))
     smooth = np.convolve(rew, np.ones(k) / k, mode="valid")
     ts_v = ts[k - 1:]
-    lo, hi = float(smooth.min()), float(smooth[-1])
-    span = abs(hi - lo) + 1e-9
-    normalized = (smooth - lo) / span          # 0..1, higher curve = faster learning
+    lo, hi = float(smooth.min()), float(smooth.max())
+    span = hi - lo
+    if span < 1e-6:
+        # Flat curve: no measurable learning progress; AUC degenerates to full
+        # (curve is trivially at its final level); steps-to-90 undefined.
+        return 1.0, None
+    normalized = (smooth - lo) / span          # 0..1, bounded by construction
     auc = float(np.mean(normalized))
     target = lo + 0.9 * span
     hit = np.where(smooth >= target)[0]

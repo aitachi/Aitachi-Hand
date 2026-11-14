@@ -6,13 +6,17 @@
 
 Language: **English** | [中文](README.zh.md) | [日本語](README.ja.md) | [한국어](README.ko.md)
 
-## Results (6 runs)
+## Results (15 runs)
 
 ### Task 1 · Collision-free free posing (5 fingers, no self-fighting)
 | Method | Seeds | Success ±σ | Time (s) | Pen. (mm) | Reward AUC | Wall (min) |
 |---|---|---|---|---|---|---|
-| PPO | 3 | 1.000±0.000 | 0.31 | 0.02 | 1.21 | 6 |
-| TR-PPO-RB ⭐ | 3 | 1.000±0.000 | 0.26 | 0.00 | 2360948113.11 | 7 |
+| PPO | 3 | 1.000±0.000 | 0.31 | 0.02 | 0.50 | 6 |
+| TRPO | 3 | 0.000±0.000 | -- | 0.03 | 0.76 | 37 |
+| TD3 | 1 | 0.000±0.000 | -- | 0.15 | 0.67 | 43 |
+| TR-PPO-RB ⭐ | 3 | 1.000±0.000 | 0.26 | 0.00 | 0.58 | 7 |
+| ESPO | 2 | 1.000±0.000 | 0.26 | 0.00 | 0.42 | 11 |
+| ExO-PPO | 3 | 1.000±0.000 | 0.26 | 0.00 | 0.58 | 11 |
 *Best (success, then time): **TR-PPO-RB***
 
 ### Task 2 · Rapid gesture sequence V → OK → OPEN

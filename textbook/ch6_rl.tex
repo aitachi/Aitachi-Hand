@@ -91,9 +91,11 @@ $c_{\mathrm{time}}{=}0.02,\,g_p{=}2,\,b_{\mathrm{tol}}{=}0.8,\,b_s{=}b_t{=}10,\,
 论文 & 训练类型 & 核心机制 & 角色 \\
 \midrule
 \endhead
-01 TRPO & 基础与复现 & 旧策略轨迹上估计优势；样本平均 KL 约束 + 共轭梯度 + 回溯线搜索 & 理论基线（对照章） \\
+01 TRPO & 基础与复现 & 旧策略轨迹上估计优势；样本平均 KL 约束 + 共轭梯度 + 回溯线搜索 & \textbf{基线 trpo（实跑，CG+线搜）} \\
 02 GAE & 基础与复现 & $\delta_t$ 按 $(\gamma\lambda)^l$ 衰减求和；$\lambda{\in}[0.92,0.98]$ 最快 & 全体 PPO 优势估计 \\
 03 PPO & 基础与复现 & $\min(\rho\hat A,\mathrm{clip}(\rho)\hat A)$；$\varepsilon{=}0.2$ 得 0.82 归一分 & \textbf{基线（实跑）} \\
+— PPO-KL & PPO 变体 & 自适应 KL 惩罚 $\rho\hat A-\beta\,\mathrm{KL}$；$\beta$ 随 KL 出 $[0.5,1.5]\times$目标 倍增/减半 & \textbf{变体 ppo\_kl（实跑）} \\
+57 ACER & 连续控制 & 截断重要性比率 + Retrace + 回放纠偏；SB3 实现仅离散动作 & 分类引用（离散对照，见跨研究表） \\
 04 Impl-Matters & 基础与复现 & 16 组实现开关：初始化/奖励尺度/归一化贡献 17--21\% & 公平实验协议来源 \\
 05 OnPolicy-AC & 基础与复现 & 25 万 agent 扫 50+ 设计选择；裁剪是强基线 & 公平实验协议来源 \\
 06 TR-PPO-RB & PPO 改进 & 越界反向斜率 rollback；逐状态 KL 触发 & \textbf{变体 ppo\_rb（实跑）} \\
@@ -109,6 +111,12 @@ $c_{\mathrm{time}}{=}0.02,\,g_p{=}2,\,b_{\mathrm{tol}}{=}0.8,\,b_s{=}b_t{=}10,\,
 27 Improve-RM & 奖励与探索 & OOD 检测 + KL 邻域探索主动收集偏好 & 分类引用（需人标） \\
 \bottomrule
 \end{longtable}
+
+\subsection{跨研究对照（RLP 基准）}
+同源方法在姊妹仓 Reinforcement-Learning-Policy 的自有基准上另有三列评测（E1/E2/E3）：
+PPG 0.669$\pm$0.02/0.681/1.000$\pm$0.00，PPO-KL 0.658/0.785/0.992，PPO-RB 0.655/0.669/0.995，
+PPO-Clip 0.652/0.620/0.996（E2 种子散布 $\pm$0.17），ESPO 0.648/0.755/0.568，TR-PPO-RB 0.625/0.754/0.694，
+TRPO E3=1.000 真值（代价为 CG+线搜开销）；ACER 为离散对照。两基准任务不同，数值不可直接横比，仅作方法族参照。
 
 \subsection{三种基线算法一页纸}
 \begin{table}[h]\centering\small
@@ -146,7 +154,7 @@ $c_{\mathrm{time}}{=}0.02,\,g_p{=}2,\,b_{\mathrm{tol}}{=}0.8,\,b_s{=}b_t{=}10,\,
 
 \subsection{对比实验设计（公平协议，源自 04/05 两篇方法论）}
 \begin{itemize}
-  \item \textbf{矩阵}：2 任务 $\times$ 9 算法 \{$\,$ppo, td3, sac, ppo\_rb, ppo\_espo, ppo\_ppo(ppg), ppo\_exo, ppo\_pbrs, ppo\_rnd$\,$\} $\times$ 3 种子；
+  \item \textbf{矩阵}：2 任务 $\times$ 11 算法（含 TRPO 与 PPO-KL） \{$\,$ppo, trpo, ppo\_kl, td3, sac, ppo\_rb, ppo\_espo, ppo\_ppg, ppo\_exo, ppo\_pbrs, ppo\_rnd$\,$\} $\times$ 3 种子；
   \item \textbf{预算}：每跑 150k 环境步；同一 MuJoCo 模型与目标文件（SHA-256 入档 \code{config.json}）；
         网络统一 256$\times$256（PPG 因需共享主干同样 256$\times$256 共享）；
   \item \textbf{评估}：训练后固定 25 个评估种子（7001--7025）确定性策略复测；成功率/到位或序列时间/穿透为硬指标；

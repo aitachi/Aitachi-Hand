@@ -8,7 +8,7 @@ import argparse
 import json
 from pathlib import Path
 
-LABEL = {"ppo": "PPO", "td3": "TD3", "sac": "SAC", "ppo_rb": "TR-PPO-RB",
+LABEL = {"ppo": "PPO", "trpo": "TRPO", "ppo_kl": "PPO-KL", "td3": "TD3", "sac": "SAC", "ppo_rb": "TR-PPO-RB",
          "ppo_espo": "ESPO", "ppo_ppg": "PPG", "ppo_exo": "ExO-PPO",
          "ppo_pbrs": "PBRS+PPO", "ppo_rnd": "RND+PPO"}
 ORDER = list(LABEL)

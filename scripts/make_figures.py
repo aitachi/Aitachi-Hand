@@ -21,12 +21,12 @@ plt.rcParams.update({
     "axes.spines.top": False, "axes.spines.right": False,
     "legend.frameon": False, "lines.linewidth": 1.6,
 })
-ALGO_ORDER = ["ppo", "td3", "sac", "ppo_rb", "ppo_espo", "ppo_ppg",
-              "ppo_exo", "ppo_pbrs", "ppo_rnd"]
-LABEL = {"ppo": "PPO", "td3": "TD3", "sac": "SAC", "ppo_rb": "TR-PPO-RB",
+ALGO_ORDER = ["ppo", "trpo", "ppo_kl", "td3", "sac", "ppo_rb", "ppo_espo",
+              "ppo_ppg", "ppo_exo", "ppo_pbrs", "ppo_rnd"]
+LABEL = {"ppo": "PPO", "trpo": "TRPO", "ppo_kl": "PPO-KL", "td3": "TD3", "sac": "SAC", "ppo_rb": "TR-PPO-RB",
          "ppo_espo": "ESPO", "ppo_ppg": "PPG", "ppo_exo": "ExO-PPO",
          "ppo_pbrs": "PBRS+PPO", "ppo_rnd": "RND+PPO"}
-COLOR = {"ppo": "#075f57", "td3": "#8a5a44", "sac": "#5b6fa5", "ppo_rb": "#c2571f",
+COLOR = {"ppo": "#075f57", "trpo": "#7a4f9e", "ppo_kl": "#4a7d2f", "td3": "#8a5a44", "sac": "#5b6fa5", "ppo_rb": "#c2571f",
          "ppo_espo": "#a38bd0", "ppo_ppg": "#3d8a5f", "ppo_exo": "#c7a514",
          "ppo_pbrs": "#2f7fbf", "ppo_rnd": "#b04a6e"}
 TASK_TITLE = {"free": "Task 1: free pose (collision-free)", "seq": "Task 2: V$\\to$OK$\\to$OPEN sequence"}
@@ -321,6 +321,33 @@ def main():
         bar_group(ax, summary, "penetration_mean_mm", task, "eval mean max-penetration (mm)", "{:.2f}")
         ax.set_title(TASK_TITLE[task], fontsize=9.5)
     save(fig, "fig12_safety_penetration")
+
+    # fig13 cross-study (RLP benchmark, static data from user's report)
+    import sys as _sys
+    from pathlib import Path as _P
+    _sys.path.insert(0, str(_P(__file__).resolve().parents[1] / "docs"))
+    from cross_study import RLP_CROSS_STUDY
+    import matplotlib.pyplot as _plt2
+    fig, ax = _plt2.subplots(figsize=(7.4, 3.4))
+    methods = [m for m, *_ in RLP_CROSS_STUDY if m != "ACER"]
+    x = np.arange(len(methods))
+    width = 0.26
+    palette = ["#2f7fbf", "#075f57", "#c2571f"]
+    for j, col in enumerate(["E1", "E2", "E3"]):
+        vals = []
+        for row in RLP_CROSS_STUDY:
+            if row[0] == "ACER":
+                continue
+            v = row[1 + j].split("±")[0]
+            vals.append(float(v) if v != "--" else np.nan)
+        ax.bar(x + (j - 1) * width, vals, width, label=col, color=palette[j], alpha=0.9)
+    ax.set_xticks(x)
+    ax.set_xticklabels(methods, rotation=30, ha="right", fontsize=8)
+    ax.set_ylabel("RLP benchmark score")
+    ax.set_ylim(0, 1.12)
+    ax.legend(fontsize=8)
+    ax.set_title("Cross-study: RLP benchmark (source: RLP report d229af8; ACER discrete-only)", fontsize=9)
+    save(fig, "fig13_cross_study")
 
     print("ALL_FIGURES_DONE")
 

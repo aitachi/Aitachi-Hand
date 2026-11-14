@@ -37,11 +37,12 @@ class PPOX(PPO):
     def __init__(self, *args, objective: str = "clip", espo: bool = False,
                  espo_drift: float = 0.25, espo_kl: float = 0.05,
                  rb_trigger_log_ratio: float = 0.5,
+                 kl_target: float = 0.008,
                  ppg: bool = False, ppg_interval: int = 9,
                  ppg_aux_epochs: int = 6, ppg_kl_beta: float = 1.0,
                  ppg_policy_epochs: int = 3, ppg_value_epochs: int = 6,
                  ppg_buffer_rollouts: int = 3, **kwargs):
-        if objective not in ("clip", "rb", "exo"):
+        if objective not in ("clip", "rb", "exo", "kl"):
             raise ValueError(objective)
         if ppg and kwargs.get("policy_kwargs", {}).get("net_arch") not in (None, [256, 256]):
             raise ValueError("PPG requires a shared trunk: net_arch=[256, 256]")
@@ -53,6 +54,8 @@ class PPOX(PPO):
         self.espo_drift = float(espo_drift)
         self.espo_kl = float(espo_kl)
         self.rb_trigger_log_ratio = float(rb_trigger_log_ratio)
+        self.kl_target = float(kl_target)
+        self._kl_beta = 1.0
         self.ppg = bool(ppg)
         self.ppg_interval = int(ppg_interval)
         self.ppg_aux_epochs = int(ppg_aux_epochs)
@@ -65,10 +68,14 @@ class PPOX(PPO):
         self.diagnostics: list[dict] = []
 
     # ------------------------------------------------------------------ utils
-    def _surrogate(self, ratio, advantages, clip_range):
+    def _surrogate(self, ratio, advantages, clip_range, approx_kl=None):
         if self.objective == "clip":
             return -th.min(advantages * ratio,
                            advantages * th.clamp(ratio, 1 - clip_range, 1 + clip_range)).mean()
+        if self.objective == "kl":
+            # PPO paper's adaptive-KL-penalty variant: rho*A - beta*KL(old||new),
+            # beta adapted between epochs (PPO-1, Schulman et al. 2017, eq. 7-8).
+            return -(ratio * advantages).mean() + self._kl_beta * approx_kl
         if self.objective == "rb":
             eps = clip_range
             c = (1 + eps) / (1 - eps)  # rollback coefficient from the Truly-PPO bound
@@ -124,7 +131,7 @@ class PPOX(PPO):
                         policy_loss = th.zeros((), device=self.device)
                         entropy_loss = th.zeros((), device=self.device)
                     else:
-                        policy_loss = self._surrogate(ratio, advantages, eps)
+                        policy_loss = self._surrogate(ratio, advantages, eps, approx_kl=approx_kl)
                         entropy_loss = -th.mean(entropy)
                     value_loss = F.mse_loss(rollout_data.returns.flatten(), values.flatten())
                     loss = policy_loss + self.ent_coef * entropy_loss + self.vf_coef * value_loss
@@ -145,9 +152,16 @@ class PPOX(PPO):
                     stats["approx_kl"] = (stats["approx_kl"] * b + approx_kl.item()) / (b + 1)
                     stats["n_minibatch"] = b + 1
                 stats["drift"] = abs(stats["ratio_mean"] - 1.0)
+                if self.objective == "kl":
+                    # Adaptive penalty coefficient between epochs (PPO paper eq. 8).
+                    if stats["approx_kl"] > 1.5 * self.kl_target:
+                        self._kl_beta *= 2.0
+                    elif stats["approx_kl"] < self.kl_target / 1.5:
+                        self._kl_beta = max(1e-6, self._kl_beta / 2.0)
                 if self.espo and (stats["drift"] > self.espo_drift or stats["approx_kl"] > self.espo_kl):
                     stop = True
                     stats["stopped_epoch"] = epoch + 1
+            stats["kl_beta"] = self._kl_beta
             return stats
 
         n_policy_epochs = self.ppg_policy_epochs if self.ppg else self.n_epochs
@@ -228,6 +242,7 @@ def make_ppox(env, seed: int, variant: str, device="auto", hparams=None):
         "clip": dict(objective="clip"),
         "rb": dict(objective="rb"),
         "exo": dict(objective="exo"),
+        "kl": dict(objective="kl"),
         "espo": dict(objective="clip", espo=True),
         "ppg": dict(objective="clip", ppg=True),
     }[variant]

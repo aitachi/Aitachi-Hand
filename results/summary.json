@@ -1,5 +1,5 @@
 {
-  "runs": 3,
+  "runs": 6,
   "summary": [
     {
       "task": "free",
@@ -30,6 +30,38 @@
       "ratio_max_std": null,
       "espo_stop_frac": null,
       "espo_stop_frac_std": null,
+      "ppg_aux_kl": null,
+      "ppg_aux_kl_std": null
+    },
+    {
+      "task": "free",
+      "algo": "ppo_rb",
+      "label": "TR-PPO-RB",
+      "seeds": 3,
+      "success_rate": 1.0,
+      "success_rate_std": 0.0,
+      "finish_time": 0.25520000000000004,
+      "finish_time_std": 0.0,
+      "mean_reward": 19.98988911183317,
+      "mean_reward_std": 0.00027107064666192826,
+      "penetration_mean_mm": 0.004475000610234319,
+      "penetration_mean_mm_std": 0.0006938957282764597,
+      "penetration_max_mm": 0.10243325571085445,
+      "penetration_max_mm_std": 0.01898178821234405,
+      "train_auc": 2360948113.1090026,
+      "train_auc_std": 172681580.0344216,
+      "steps_to_90": 7000.0,
+      "steps_to_90_std": 0.0,
+      "wall_seconds": 476.411137898763,
+      "wall_seconds_std": 23.534929159439073,
+      "clip_frac": 0.4217261904761904,
+      "clip_frac_std": 0.0028748182570081317,
+      "approx_kl": 16.303103417016214,
+      "approx_kl_std": 2.4872642468494153,
+      "ratio_max": 103257.54427083333,
+      "ratio_max_std": 20363.3068942729,
+      "espo_stop_frac": 0.0,
+      "espo_stop_frac_std": 0.0,
       "ppg_aux_kl": null,
       "ppg_aux_kl_std": null
     }

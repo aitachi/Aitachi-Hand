@@ -27,13 +27,13 @@ PPO_HPARAMS = dict(
 
 TD3_HPARAMS = dict(
     learning_rate=1e-3,
-    buffer_size=300_000,
+    buffer_size=150_000,
     learning_starts=5_000,
     batch_size=256,
     tau=0.005,
     gamma=0.99,
-    train_freq=(1, "step"),
-    gradient_steps=1,
+    train_freq=(4, "step"),
+    gradient_steps=4,
     action_noise=None,  # set per-task from action dim
     policy_delay=2,
     target_policy_noise=0.2,
@@ -43,13 +43,25 @@ TD3_HPARAMS = dict(
 
 SAC_HPARAMS = dict(
     learning_rate=3e-4,
-    buffer_size=300_000,
+    buffer_size=150_000,
     learning_starts=5_000,
     batch_size=256,
     tau=0.005,
     gamma=0.99,
-    train_freq=(1, "step"),
-    gradient_steps=1,
+    train_freq=(4, "step"),
+    gradient_steps=4,
+    policy_net=[256, 256],
+)
+
+TRPO_HPARAMS = dict(
+    learning_rate=1e-3,          # critic (value) optimizer
+    n_steps=256,
+    batch_size=2048,             # full rollout batch for the CG surrogate
+    gamma=0.99,
+    gae_lambda=0.95,
+    target_kl=0.01,
+    cg_max_steps=10,
+    cg_damping=0.1,
     policy_net=[256, 256],
 )
 
@@ -93,5 +105,20 @@ def make_sac(env, seed: int, hparams=None, device="auto"):
         tau=hp["tau"], gamma=hp["gamma"], train_freq=hp["train_freq"],
         gradient_steps=hp["gradient_steps"],
         policy_kwargs={"net_arch": {"pi": hp["policy_net"], "qf": hp["policy_net"]}},
+        seed=seed, verbose=0, device=device,
+    )
+
+
+def make_trpo(env, seed: int, hparams=None, device="auto"):
+    """TRPO with conjugate-gradient + backtracking line search (sb3-contrib)."""
+    from sb3_contrib import TRPO
+    hp = {**TRPO_HPARAMS, **(hparams or {})}
+    return TRPO(
+        "MlpPolicy", env,
+        learning_rate=hp["learning_rate"], n_steps=hp["n_steps"],
+        batch_size=hp["batch_size"], gamma=hp["gamma"],
+        gae_lambda=hp["gae_lambda"], target_kl=hp["target_kl"],
+        cg_max_steps=hp["cg_max_steps"], cg_damping=hp["cg_damping"],
+        policy_kwargs={"net_arch": {"pi": hp["policy_net"], "vf": hp["policy_net"]}},
         seed=seed, verbose=0, device=device,
     )

@@ -32,10 +32,11 @@ reach arbitrary poses on the natural-pose manifold without self-collision, and
 (ii) \emph{rapid gesture sequencing}, a chained V$\to$OK$\to$OPEN task with
 per-phase geometric acceptance. Building on a numerically validated residual
 action design that makes the zero policy a solvable direct baseline, we
-evaluate three algorithm families---PPO, TD3, and SAC---and six published
-PPO-centric improvements (TR-PPO-RB rollback, ESPO early stopping, PPG phasic
-updates, ExO-PPO smooth off-policy surrogates, potential-based reward shaping,
-and RND intrinsic motivation) under a fixed budget (150k environment steps,
+evaluate eleven methods---TRPO with conjugate-gradient line search, PPO and
+its adaptive-KL variant, TD3, SAC, and six published PPO-centric improvements
+(TR-PPO-RB rollback, ESPO early stopping, PPG phasic updates, ExO-PPO smooth
+off-policy surrogates, potential-based reward shaping, and RND intrinsic
+motivation) under a fixed budget (150k environment steps,
 three seeds, shared 256$\times$256 networks, fixed 25-seed deterministic
 evaluation). We release the hardware mapping tables (17 axes, measured
 min/center/max), the servo protocol appendix, both MuJoCo environments, all
@@ -68,10 +69,10 @@ three-axis broadcast protocol under electrical guards
 \item two gesture tasks that isolate distinct difficulties: self-collision
 avoidance during free posing, and long-horizon credit assignment during
 chained gesture sequencing (Sec.~\ref{sec:tasks});
-\item a controlled study of nine algorithms---three families and six
-published PPO improvements---under identical rollouts, budgets, networks,
-and evaluation seeds (Sec.~\ref{sec:results}), with all reimplementation
-deviations stated explicitly.
+\item a controlled study of eleven algorithms---TRPO, PPO, PPO-KL, TD3,
+SAC, and six published PPO improvements---under identical rollouts, budgets,
+networks, and evaluation seeds (Sec.~\ref{sec:results}), with all
+reimplementation deviations stated explicitly.
 \end{enumerate}
 
 \section{Related Work}\label{sec:related}
@@ -108,6 +109,27 @@ TWTL shaping~\cite{twtl} matches our task structure but needs demonstrations.
 are the off-policy continuous-control baselines; ANYmal sim-to-real~\cite{anymal},
 RMA~\cite{rma}, and RL-100~\cite{rl100} contextualize deployment practice.
 
+\begin{figure}[!t]
+\centering
+\begin{tikzpicture}
+\begin{axis}[width=\linewidth,height=4.6cm,xlabel={$\rho$},
+  ylabel={per-sample objective},legend style={font=\scriptsize,at={(0.98,0.98)},anchor=north east},
+  domain=0.55:1.65,samples=160,grid=both,grid style={gray!20},
+  xmin=0.55,xmax=1.65,ymin=-0.02,ymax=1.32,xtick={0.8,1.0,1.2,1.4,1.6},
+  tick label style={font=\scriptsize},label style={font=\scriptsize}]
+  \addplot[thick,teal]{min(x,1.2)};
+  \addlegendentry{PPO-Clip ($\varepsilon{=}0.2$)}
+  \addplot[thick,orange,dashed]{x - 1.5*max(x-1.2,0)};
+  \addlegendentry{TR-PPO-RB rollback}
+  \addplot[thick,violet,domain=0.55:1.65,samples=320]{x <= 1.2 ? x : 1.2 + 0.2*tanh((x-1.2)/0.2)};
+  \addlegendentry{ExO smooth compression}
+\end{axis}
+\end{tikzpicture}
+\caption{Surrogate-objective geometry at $\hat A{=}1$: beyond the trust region
+clip zeroes the gradient, rollback reverses the slope, ExO compresses it smoothly.}
+\label{fig:geometry}
+\end{figure}
+
 \begin{table}[!t]
 \caption{Sixteen papers, four groups, and their role in this study}
 \label{tab:groups}
@@ -117,12 +139,13 @@ RMA~\cite{rma}, and RL-100~\cite{rl100} contextualize deployment practice.
 \toprule
 \# & Method & Role here \\
 \midrule
-01--05 & TRPO, GAE, PPO, Impl., OnPolicy-AC & foundations; 03 run as baseline; 04--05 define protocol \\
+01--05 & TRPO, GAE, PPO, Impl., OnPolicy-AC & foundations; 01 (CG+line search) and 03 run; PPO-KL variant run; 04--05 define protocol \\
 06--08, 25 & TR-PPO-RB, ESPO, PPG, ExO-PPO & \textbf{implemented and run} on both tasks \\
 26 & OPPO & systems group, cited only \\
 09, 11 & PBRS, RND & \textbf{implemented and run} as reward add-ons \\
 10, 12, 13, 27 & Pref, Eureka, TWTL, Impr-RM & classified; require labels/LLM/demos \\
 31, 32 & TD3, SAC & \textbf{run} as off-policy baselines \\
+57 & ACER & discrete-action cross-reference (SB3 ACER cannot run continuous tasks) \\
 56, 55, 62 & ANYmal, RMA, RL-100 & deployment references \\
 \bottomrule
 \end{tabular}
@@ -202,8 +225,14 @@ born from a documented failure analysis of an earlier delta-action
 formulation, is what makes cross-algorithm comparison meaningful.
 
 \subsection{Algorithms and Variants}
-PPO, TD3, and SAC use standard published hyperparameters (Appendix~B of the
-repository textbook). The PPO backbone \code{PPOX} switches between four
+TRPO (sb3-contrib) uses a full-batch conjugate-gradient update with target
+KL 0.01, CG damping 0.1, and backtracking line search; PPO-KL implements the
+adaptive-KL-penalty objective of the original PPO paper ($\beta$ doubled or
+halved when KL leaves $[0.5,1.5]\times$ target 0.008). PPO uses standard
+published hyperparameters; TD3 and SAC update in batches of
+4 gradient steps every 4 environment steps (update-to-data ratio 1:1 as in the
+original papers; batching is a wall-clock optimization, disclosed here as part
+of the protocol). Full tables appear in Appendix~B of the repository textbook. The PPO backbone \code{PPOX} switches between four
 surrogates---clip (baseline), rollback (TR-PPO-RB with $c=(1{+}\epsilon)/(1{-}\epsilon)$
 and a $|\log\rho|>0.5$ per-state KL proxy), ExO smooth saturation
 ($\epsilon\tanh$ beyond the region), and clip-with-ESPO epoch-level early
@@ -228,6 +257,33 @@ Hardware: RTX 3070 Laptop, torch 2.11+cu130, SB3 2.9.2, MuJoCo 3.3.7.
 
 \section{Results and Discussion}\label{sec:results}
 \input{results_auto}
+
+\subsection{Cross-Study Context}
+As external context, Table~\ref{tab:cross} quotes the companion
+Reinforcement-Learning-Policy study (report d229af8) that benchmarks several
+of the same PPO variants on its own suite; TRPO attains the exact E3 optimum
+at the cost of conjugate-gradient line-search overhead, and ACER serves as a
+discrete-action cross-reference that cannot enter our continuous tasks.
+
+\begin{table}[!t]
+\caption{Cross-study scores (RLP benchmark, E1/E2/E3)}
+\label{tab:cross}
+\centering\small
+\begin{tabular}{@{}lccc@{}}
+\toprule
+Method & E1 & E2 & E3 \\
+\midrule
+PPG & 0.669$\pm$0.02 & 0.681 & 1.000$\pm$0.00 \\
+PPO-KL & 0.658 & 0.785 & 0.992 \\
+PPO-RB & 0.655 & 0.669 & 0.995 \\
+PPO-Clip & 0.652 & 0.620 & 0.996$^{\pm0.17}$ \\
+ESPO & 0.648 & 0.755 & 0.568 \\
+TR-PPO-RB & 0.625 & 0.754 & 0.694 \\
+TRPO & -- & -- & 1.000 \\
+ACER & \multicolumn{3}{c}{discrete-only cross-reference} \\
+\bottomrule
+\end{tabular}
+\end{table}
 
 \section{Limitations}
 Results are simulation-scoped: no claim is made that any trained trajectory

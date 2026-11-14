@@ -86,8 +86,8 @@ PPG & 策略轮/价值轮/辅助轮/KL$\beta$/间隔 & 3 / 6 / 6 / 1.0 / 每 9 �
 ExO & 软饱和 & $\varepsilon\tanh((\log\rho{-}\varepsilon)/\varepsilon)$ \\
 PBRS & 势函数/尺度 & $\Phi{=}-2\overline{|e_{norm}|}$，$F{=}\gamma\Phi'{-}\Phi$ \\
 RND & 隐层/嵌入/lr/$\lambda$ & 256 / 64 / 1e-4 / 0.5（单价值头简化） \\
-TD3 & lr/缓冲/起始/batch/$\tau$/噪声/延迟 & 1e-3 / 300k / 5k / 256 / 5e-3 / $\sigma{=}0.1$ / 2 \\
-SAC & lr/缓冲/起始/batch/$\tau$ & 3e-4 / 300k / 5k / 256 / 5e-3（目标熵 $-16$） \\
+TD3 & lr/缓冲/起始/batch/$\tau$/噪声/延迟 & 1e-3 / 150k / 5k / 256 / 5e-3 / $\sigma{=}0.1$ / 2（每 4 步 4 更新） \\
+SAC & lr/缓冲/起始/batch/$\tau$ & 3e-4 / 150k / 5k / 256 / 5e-3（目标熵 $-16$，每 4 步 4 更新） \\
 \bottomrule
 \end{tabular}
 \end{table}

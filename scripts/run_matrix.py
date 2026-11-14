@@ -24,7 +24,7 @@ from stable_baselines3.common.vec_env import SubprocVecEnv
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from algorithms import (PBRSWrapper, RNDRewardWrapper, RNDModule,  # noqa: E402
-                        make_ppo, make_ppox, make_sac, make_td3)
+                        make_ppo, make_ppox, make_sac, make_td3, make_trpo)
 from envs import TASKS  # noqa: E402
 
 N_ENVS_ONPOLICY = 8
@@ -147,8 +147,8 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--task", choices=list(TASKS), required=True)
     parser.add_argument("--algo", required=True,
-                        choices=["ppo", "td3", "sac", "ppo_rb", "ppo_espo",
-                                 "ppo_ppg", "ppo_exo", "ppo_pbrs", "ppo_rnd"])
+                        choices=["ppo", "td3", "sac", "trpo", "ppo_kl", "ppo_rb",
+                                 "ppo_espo", "ppo_ppg", "ppo_exo", "ppo_pbrs", "ppo_rnd"])
     parser.add_argument("--seed", type=int, default=1)
     parser.add_argument("--timesteps", type=int, default=150_000)
     parser.add_argument("--out", default="results")
@@ -174,6 +174,8 @@ def main():
 
     if args.algo in ("ppo", "ppo_pbrs", "ppo_rnd"):
         model = make_ppo(env, args.seed, device=device)
+    elif args.algo == "trpo":
+        model = make_trpo(env, args.seed, device=device)
     elif args.algo == "td3":
         model = make_td3(env, args.seed, device=device)
     elif args.algo == "sac":

@@ -19,7 +19,8 @@ API_ROOT = "https://api.github.com"
 
 # Files/dirs to publish (relative). Results: summaries only, no checkpoints.
 INCLUDE_DIRS = ["envs", "algorithms", "scripts", "textbook", "paper", "figures", "docs", "results"]
-INCLUDE_FILES = ["README.md", ".gitignore", "LICENSE", "requirements.txt"]
+INCLUDE_FILES = ["README.md", "README.zh.md", "README.ja.md", "README.ko.md",
+                  ".gitignore", "LICENSE", "requirements.txt"]
 EXCLUDE_PARTS = {"__pycache__", "checkpoints", "logs", "build1.log", "build2.log"}
 EXCLUDE_SUFFIXES = (".aux", ".log", ".out", ".toc", ".pyc", ".zip", ".obj", ".tmp")
 EXCLUDE_NAMES = {"final_model.zip"}

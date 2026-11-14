@@ -13,10 +13,10 @@ from pathlib import Path
 
 import numpy as np
 
-ALGO_ORDER = ["ppo", "td3", "sac", "ppo_rb", "ppo_espo", "ppo_ppg",
-              "ppo_exo", "ppo_pbrs", "ppo_rnd"]
+ALGO_ORDER = ["ppo", "trpo", "ppo_kl", "td3", "sac", "ppo_rb", "ppo_espo",
+              "ppo_ppg", "ppo_exo", "ppo_pbrs", "ppo_rnd"]
 ALGO_LABEL = {
-    "ppo": "PPO", "td3": "TD3", "sac": "SAC",
+    "ppo": "PPO", "trpo": "TRPO", "ppo_kl": "PPO-KL", "td3": "TD3", "sac": "SAC",
     "ppo_rb": "TR-PPO-RB", "ppo_espo": "ESPO", "ppo_ppg": "PPG",
     "ppo_exo": "ExO-PPO", "ppo_pbrs": "PBRS+PPO", "ppo_rnd": "RND+PPO",
 }

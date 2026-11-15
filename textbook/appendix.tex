@@ -1,0 +1,118 @@
+\appendix
+
+\section{附录 A：飞特舵机控制指令集（HLS 实测版）}\label{app:servo}
+资料来源：官方手册入口 doc.feetech.cn（FTServo e-manual）；以下寄存器与帧格式以
+\code{AHandNative.cpp} / \code{hand\_cli.cpp} 在 COM3 @1 Mbps 实测为准（HLS2915/3930，固件 3.45）。
+
+\subsection{帧格式}
+\begin{center}
+\texttt{FF FF $\mid$ ID $\mid$ LEN $\mid$ 指令 $\mid$ 参数... $\mid$ 校验和}\qquad
+校验和 $=\,\sim\!\sum(\text{ID..末参数})$ 低 8 位
+\end{center}
+\begin{table}[h]\centering
+\caption{指令集}\label{tab:instr}
+\begin{tabular}{cll}
+\toprule
+码 & 名称 & 说明 \\
+\midrule
+0x01 & PING & 探活，返回状态包 \\
+0x02 & READ & 读寄存器：参数 = 起始地址 + 字节数 \\
+0x03 & WRITE & 写寄存器：参数 = 起始地址 + 数据 \\
+0x04 & REG WRITE & 缓存写，等 ACTION 触发 \\
+0x05 & ACTION & 触发缓存写 \\
+0x06 & RESET & 恢复出厂（慎用，会清 ID/零位） \\
+0x83 & SYNC WRITE & 多轴同步写（本机三轴一批，广播 0xFE） \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{关键寄存器（HLS 实测）}
+\begin{table}[h]\centering
+\caption{寄存器表（地址十进制）}\label{tab:regs}
+\begin{tabular}{rll}
+\toprule
+地址 & 名称 & 读写要点 \\
+\midrule
+3 (word) & 型号编码 & 6922=HLS2915；4106=HLS3930；preflight 校验用 \\
+9/11 (word) & 最小/最大位置限位 & 写入目标越界即拒发 \\
+30 & 工作模式/分辨率 & 实测应为 1（0--4095 全程） \\
+33 & — & 实测应为 0 \\
+40 & 转矩使能 & 1=上电保持；0=卸力；\textbf{卸力必须回读确认} \\
+41 (9B) & 运动指令 & 加速度(1B) + 位置(2) + 电流(2) + 速度(2) + 扭矩限制(2)，小端 \\
+56 (15B) & 反馈区 & [0:2]位置 [2:4]速度 [6]电压 [7]温度 [13:15]电流 \\
+\bottomrule
+\end{tabular}
+\end{table}
+位置/速度/电流为\textbf{符号-数值 15 位编码}（最高位符号，低 15 位幅值）。
+
+\subsection{三轴同步写示例（0x83，本机实测配方）}
+\begin{lstlisting}
+FF FF FE 22 83 29 09          # 广播ID=FE, LEN=4+10*3, 起始寄存器41, 每轴9字节
+  <ID1> <accel> <pos_L pos_H> <cur_L cur_H> <spd_L spd_H> <lim_L lim_H>
+  <ID2> ...                    # 每批最多 3 轴；ID 不得重复
+  <ID3> ...
+  <checksum = ~sum(ID..lim_H)>
+\end{lstlisting}
+合法性窗口（越界拒发）：位置 50--4050 · 加速度 1--254 · 速度 1--600 · 电流 1--68 · 扭矩限制 1--1000。
+发送后逐轴 READ 寄存器 41 回读比对，再轮询 56 反馈直到连续 3 次 $|$位置$-$目标$|$$\le$20 且 $|$速度$|$$\le$2。
+
+\subsection{FD.exe 上位机操作要点}
+改 ID（单舵机接 USB）→ 读参数页（型号/固件/零位偏移）→ 缓动采集 \code{min/center/max} →
+导出 CSV。注意 FD 与自研软件互斥 COM3；FD 的"零位偏移"写 EEPROM，
+本项目标定只读不写，换算在软件侧完成。
+
+\subsection{常用低层调用（\code{hand\_cli} 语义）}
+\begin{lstlisting}[language=bash]
+./AHandNative.exe --inspect          # 巡检：连 17 轴，识别当前姿态，不发运动
+./AHandNative.exe --run V            # 执行 OPEN->V 轨迹（结束自动卸力回读）
+./AHandNative.exe --selftest         # 协议/调优/护栏自检（不开串口）
+python align_real.py --status        # 只读巡检（部署包）
+python align_real.py OK --dry-run    # 算目标不下发
+python align_real.py --probe 14 +60  # 单轴微动探针（步长上限 60 raw）
+\end{lstlisting}
+
+\section{附录 B：超参数总表}
+\begin{table}[h]\centering\small
+\caption{训练超参（与 \code{algorithms/baselines.py} 同步）}\label{tab:hp}
+\begin{tabular}{lp{5.6cm}p{6.4cm}}
+\toprule
+族 & 参数 & 值 \\
+\midrule
+PPO 共用 & lr/$\gamma$/$\lambda$/裁剪/熵/值系数/梯度范数 & 3e-4 / 0.99 / 0.95 / 0.2 / 5e-4 / 0.5 / 0.5 \\
+ & 采样/批量/轮数/网络 & 8 环境 $\times$ 256 步 / 512 / 10 / [256,256]，$\log\sigma_0{=}-1.5$ \\
+TR-PPO-RB & rollback 系数 $c$ / KL 代理触发 & $(1{+}\varepsilon)/(1{-}\varepsilon){=}1.5$ / $|\log\rho|{>}0.5$ \\
+ESPO & 漂移阈值 / KL 阈值 & 0.25 / 0.05（epoch 间早停） \\
+PPG & 策略轮/价值轮/辅助轮/KL$\beta$/间隔 & 3 / 6 / 6 / 1.0 / 每 9 次 rollout \\
+ExO & 软饱和 & $\varepsilon\tanh((\log\rho{-}\varepsilon)/\varepsilon)$ \\
+PBRS & 势函数/尺度 & $\Phi{=}-2\overline{|e_{norm}|}$，$F{=}\gamma\Phi'{-}\Phi$ \\
+RND & 隐层/嵌入/lr/$\lambda$ & 256 / 64 / 1e-4 / 0.5（单价值头简化） \\
+TD3 & lr/缓冲/起始/batch/$\tau$/噪声/延迟 & 1e-3 / 150k / 5k / 256 / 5e-3 / $\sigma{=}0.1$ / 2（每 4 步 4 更新） \\
+SAC & lr/缓冲/起始/batch/$\tau$ & 3e-4 / 150k / 5k / 256 / 5e-3（目标熵 $-16$，每 4 步 4 更新） \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\section{附录 C：一键复现}
+\begin{lstlisting}[language=bash]
+git clone https://github.com/aitachi/Aitachi-Hand && cd Aitachi-Hand
+python scripts/fetch_assets.py            # 拉官方 orcahand_description 模型(111MB, 不入仓)
+bash scripts/smoke_all.sh                 # 13 路径冒烟(~4 min)
+bash scripts/run_matrix_all.sh            # 54 跑全矩阵(约 6-8 h, RTX3070 实测口径)
+python scripts/aggregate.py               # results/summary.csv + summary.json
+python scripts/make_figures.py            # figures/fig01..fig12 对比学术图
+cd textbook && bash build_pdf.sh          # 本教材 PDF
+cd paper && bash build_pdf.sh             # IEEE 论文 PDF
+\end{lstlisting}
+
+\section{附录 D：踩坑实录（按时间线）}
+\begin{enumerate}
+  \item \textbf{v2 零成功三重根因}：增量动作随机游走 / 采样噪声破坏保持判据 / 碰撞早退被利用。
+        修复=绝对残差动作 + $\log\sigma_0{=}-1.5$ + 取消碰撞早退（改持续惩罚）；
+  \item \textbf{\code{actuator\_forerange} 笔误}：MuJoCo 正确字段是 \code{actuator\_forcerange}；
+  \item \textbf{WSL Vulkan=llvmpipe}：原生窗口渲染不可行 $\Rightarrow$ 无界面求解 + FFplay/浏览器回放；
+  \item \textbf{SB3 2.9 API 变化}：on-policy 缓冲直出 torch 张量（勿 \code{np.clip}）、
+        离策略 \code{net\_arch} 必须用 \code{\{pi,qf\}} 字典、优化器在 \code{policy.optimizer}；
+  \item \textbf{WSL 后台任务}：\code{wsl\ \&\ nohup} 会被会话回收，需 Windows 侧常驻进程持有；
+  \item \textbf{Git-Bash 路径转换}：\code{/mnt/c} 参数会被 MSYS 改写，包在 \code{bash -lc '...'} 内执行；
+  \item \textbf{多版本交付}：每类产物只留一个最终版，更新=改单源重建原地覆盖。
+\end{enumerate}

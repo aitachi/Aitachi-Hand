@@ -1,0 +1,22 @@
+# Python
+__pycache__/
+*.pyc
+.venv/
+# Assets (111MB official model — fetched via scripts/fetch_assets.py)
+assets/
+# Experiment heavy artifacts (summaries ARE committed)
+results/*/final_model.zip
+results/*/checkpoints/
+logs/
+*.egg-info/
+# Build intermediates
+textbook/main.aux
+textbook/main.log
+textbook/main.out
+textbook/main.toc
+textbook/main.fls
+textbook/main.fdb_latexmk
+textbook/build*.log
+paper/*.aux
+paper/*.log
+paper/*.out

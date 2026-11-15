@@ -1,0 +1,73 @@
+% AUTO-GENERATED from summary.json (66 runs). Do not edit by hand.
+\subsection{Quantitative Results}
+\begin{table}[!t]
+\caption{Task 1: collision-free free posing: mean$\pm$std over seeds (25-episode deterministic eval)}
+\label{tab:res-free}
+\centering\small
+\begin{tabular}{@{}lccc@{}}
+\toprule
+Method & Success & Time (s) & Pen. (mm) \\
+\midrule
+PPO & 1.000$\pm$0.000 & 0.31 & 0.02 \\
+TRPO & 0.000$\pm$0.000 & -- & 0.03 \\
+PPO-KL & 1.000$\pm$0.000 & 0.26 & 0.00 \\
+TD3 & 0.333$\pm$0.471 & 0.37 & 0.09 \\
+SAC & 0.960$\pm$0.033 & 0.37 & 0.01 \\
+TR-PPO-RB & 1.000$\pm$0.000 & 0.26 & 0.00 \\
+ESPO & 1.000$\pm$0.000 & 0.26 & 0.00 \\
+PPG & 1.000$\pm$0.000 & 0.26 & 0.01 \\
+ExO-PPO & 1.000$\pm$0.000 & 0.26 & 0.00 \\
+PBRS+PPO & 1.000$\pm$0.000 & 0.30 & 0.01 \\
+RND+PPO & 0.000$\pm$0.000 & -- & 0.18 \\
+\bottomrule
+\end{tabular}
+\end{table}
+\begin{table}[!t]
+\caption{Task 2: V$\to$OK$\to$OPEN sequencing: mean$\pm$std over seeds (25-episode deterministic eval)}
+\label{tab:res-seq}
+\centering\small
+\begin{tabular}{@{}lccc@{}}
+\toprule
+Method & Success & Time (s) & Pen. (mm) \\
+\midrule
+PPO & 1.000$\pm$0.000 & 1.16 & 0.58 \\
+TRPO & 0.000$\pm$0.000 & -- & 0.06 \\
+PPO-KL & 1.000$\pm$0.000 & 1.02 & 0.75 \\
+TD3 & 1.000$\pm$0.000 & 2.30 & 1.88 \\
+SAC & 0.000$\pm$0.000 & -- & 0.37 \\
+TR-PPO-RB & 1.000$\pm$0.000 & 1.02 & 0.75 \\
+ESPO & 1.000$\pm$0.000 & 1.02 & 0.75 \\
+PPG & 1.000$\pm$0.000 & 1.03 & 0.71 \\
+ExO-PPO & 1.000$\pm$0.000 & 1.02 & 0.75 \\
+PBRS+PPO & 1.000$\pm$0.000 & 1.14 & 0.56 \\
+RND+PPO & 0.000$\pm$0.000 & -- & 1.07 \\
+\bottomrule
+\end{tabular}
+\end{table}
+\subsection{Key Findings}
+On Task 1, PPO attains the highest deterministic success rate (1.000) with mean arrival 0.31\,s; Fig.~\ref{fig:learn-free}--\ref{fig:safety} report learning curves, sample efficiency, phase decomposition, wall-clock efficiency, and safety penetration.
+On Task 2, TD3 shows the strongest training AUC (0.961); ESPO early-stop statistics and PPG auxiliary KL appear in the diagnostics figure; all numbers regenerate from \code{results/summary.json} via \code{scripts/gen\_results\_snippet.py}.
+\begin{figure}[!t]\centering
+\includegraphics[width=\linewidth]{fig01_learning_free.pdf}
+\caption{Task 1 training curves (smoothed success rate vs.\ environment steps; 3 seeds).}\label{fig:learn-free}
+\end{figure}
+
+\begin{figure}[!t]\centering
+\includegraphics[width=\linewidth]{fig02_learning_seq.pdf}
+\caption{Task 2 training curves.}\label{fig:learn-seq}
+\end{figure}
+
+\begin{figure}[!t]\centering
+\includegraphics[width=\linewidth]{fig05_sample_efficiency.pdf}
+\caption{Sample efficiency: steps for the smoothed training reward to reach 90\% of its final level.}\label{fig:eff}
+\end{figure}
+
+\begin{figure}[!t]\centering
+\includegraphics[width=\linewidth]{fig10_phase_decomposition.pdf}
+\caption{Task 2 per-phase time decomposition on successful episodes.}\label{fig:phase}
+\end{figure}
+
+\begin{figure}[!t]\centering
+\includegraphics[width=\linewidth]{fig12_safety_penetration.pdf}
+\caption{Safety proxy: mean maximum self-penetration during evaluation.}\label{fig:safety}
+\end{figure}

@@ -1,0 +1,70 @@
+\documentclass[UTF8,a4paper,11pt]{ctexart}
+\usepackage[margin=2.4cm]{geometry}
+\usepackage{amsmath}
+\usepackage{booktabs}
+\usepackage{longtable}
+\usepackage{array}
+\usepackage{graphicx}
+\usepackage{xcolor}
+\usepackage{tikz}
+\usetikzlibrary{arrows.meta,positioning,shapes.geometric,calc,fit,backgrounds}
+\usepackage{pgfplots}
+\pgfplotsset{compat=1.17}
+\usepackage{listings}
+\usepackage{tcolorbox}
+\usepackage{hyperref}
+\hypersetup{colorlinks=true,linkcolor=blue!55!black,urlcolor=teal!70!black,
+  pdftitle={Aitachi-Hands 灵巧手全栈教材},pdfauthor={Aitachi}}
+\usepackage{fancyhdr}
+\pagestyle{fancy}\fancyhf{}
+\fancyhead[L]{\small Aitachi-Hands 全栈教材}\fancyhead[R]{\small\thepage}
+\renewcommand{\headrulewidth}{0.4pt}
+
+\definecolor{keygreen}{RGB}{7,95,87}
+\definecolor{soft}{RGB}{240,247,244}
+\definecolor{warn}{RGB}{170,80,30}
+\newtcolorbox{keybox}{colback=soft,colframe=keygreen,boxrule=0.8pt,arc=2pt,left=6pt,right=6pt,top=4pt,bottom=4pt}
+\newtcolorbox{warnbox}{colback=warn!6,colframe=warn,boxrule=0.8pt,arc=2pt,left=6pt,right=6pt,top=4pt,bottom=4pt}
+
+\lstset{basicstyle=\ttfamily\small,breaklines=true,frame=single,
+  backgroundcolor=\color{gray!6},columns=fullflexible,
+  keywordstyle=\color{keygreen},commentstyle=\color{gray}}
+
+\newcommand{\code}[1]{\texttt{#1}}
+
+\title{\Huge\textbf{Aitachi-Hands 灵巧手全栈教材}\\[6pt]
+\Large 硬件设计 · 安装标定 · 软件对齐 · 驱动 · MuJoCo / Isaac Lab 仿真 · 强化学习双任务}
+\author{Aitachi}
+\date{2026 年 11 月 · v1.0}
+
+\begin{document}
+\maketitle
+\thispagestyle{fancy}
+
+\begin{keybox}
+\textbf{读本定位}：本教材以 ORCA Hand v2 开源灵巧手为硬件本体，以飞特（Feetech）串行总线舵机为执行器，
+贯穿\textbf{硬件设计 → 安装标定 → 软件对齐 → 驱动安装 → MuJoCo 仿真 → Isaac Lab 仿真 → 强化学习双任务对比实验}全链路。
+所有命令、寄存器、参数表均取自本工程实测代码与日志（COM3 实机、17 轴标定、PPO v3 产线），
+而非转抄手册。配套代码仓：\code{github.com/aitachi/Aitachi-Hand}。
+\end{keybox}
+
+\begin{keybox}
+\textbf{命名对照（Aitachi-Hands 项目）}：本项目统一品牌为 \textbf{Aitachi-Hands}。文中
+\code{AHand*}（AHandNative.exe、AHand-calibration.json、AHand/ 目录等）为实机工件的原生文件名，
+一律对应 Aitachi-Hands 项目组件（如 AHandNative = Aitachi-Hands 原生控制台）；
+\code{orca\_v2}/ORCA Hand v2 为上游开源硬件设计与官方资产目录名（CC BY 4.0，依许可保留署名）。
+\end{keybox}
+
+\tableofcontents
+\newpage
+
+\input{ch1_design}
+\input{ch2_assembly}
+\input{ch3_software}
+\input{ch4_drivers}
+\input{ch5a_mujoco}
+\input{ch5b_isaac}
+\input{ch6_rl}
+\input{appendix}
+
+\end{document}

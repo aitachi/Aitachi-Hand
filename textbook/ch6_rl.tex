@@ -1,0 +1,174 @@
+\section{强化学习：双任务、算法族与对比实验}
+
+\subsection{任务定义（与 \code{envs/} 一一对应）}
+
+\subsubsection{任务一 \code{AitachiFree-v1}：五指全自由活动但不打架}
+每回合在"自然位姿流形"上采样一个目标姿态：三锚点（OPEN/V/OK）的 Dirichlet 凸组合 + $\sigma{=}0.05$ rad 噪声，
+裁剪进关节限位。要求全程自碰撞穿透 $\le$ 5 mm（失败线），\textbf{无碰撞（$\le$1 mm）保持 3 个控制周期}才算成功——
+"不打架"被显式写进成功判据。回合预算 2.5 s，控制 16 指（腕固定）。
+
+\subsubsection{任务二 \code{AitachiSeq-v1}：V $\to$ OK $\to$ OPEN 快速手势序列}
+单回合内三相位接力：每相位须满足 v3 验收窗（位置误差 $\le$0.12 rad、速度 $\le$0.35 rad/s、
+V 分指 $\ge$30 mm / OK 拇食距 $\le$10 mm、保持 3 周期）才切换目标；三相位全过=成功。
+每相位预算 2.0 s（总 6.0 s）；观测 = 80 维关节块 + 3 维相位 one-hot + 1 维相位进度（84 维）。
+
+\begin{center}
+\begin{tikzpicture}[node distance=12mm,
+  st/.style={draw=keygreen,fill=soft,rounded corners=3pt,align=center,inner sep=6pt,font=\small},
+  arrow/.style={-{Stealth[length=3mm]},thick}]
+  \node[st] (s0) {OPEN 起始\\$\sigma{=}0.02$ rad 扰动};
+  \node[st,right=16mm of s0] (v) {相位 1：V\\验收窗+3 周期保持};
+  \node[st,right=16mm of v] (ok) {相位 2：OK\\拇食距 $\le$10 mm};
+  \node[st,right=16mm of ok] (op) {相位 3：OPEN\\回正五指};
+  \node[st,below=14mm of ok,draw=warn,fill=warn!6] (fail) {失败：超时 / 穿透 $>$5 mm / 非有限态};
+  \draw[arrow] (s0)--(v); \draw[arrow] (v)--node[above,font=\scriptsize]{$8{+}8\cdot$余时} (ok);
+  \draw[arrow] (ok)--node[above,font=\scriptsize]{$8{+}8\cdot$余时} (op);
+  \draw[arrow] (op)--node[above,font=\scriptsize]{成功 $+5$} ++(2.1,0);
+  \draw[arrow,gray] (v) -- (fail); \draw[arrow,gray] (ok) -- (fail);
+\end{tikzpicture}
+\end{center}
+
+\subsection{奖励函数（v3 数值验证权重）}
+\begin{align*}
+r =\;& -w_e\,\overline{e_{\mathrm{norm}}^2} - w_v\,\overline{v_{\mathrm{excess}}^2}
+      - w_a\,\overline{(a_t - a_{t-1})^2} - w_f\,\overline{f_{\mathrm{norm}}^2}
+      - w_c\,\mathrm{coll} - c_{\mathrm{time}} \\
+    & + g_p\,(\bar e_{t-1} - \bar e_t) + b_{\mathrm{tol}}\mathbf{1}_{\mathrm{tol}}
+      + r_{\mathrm{phase}} + \big(b_s + b_t(1 - t/T)\big)\mathbf{1}_{\mathrm{succ}}
+      - p_f\mathbf{1}_{\mathrm{fail}}
+\end{align*}
+默认权重：$w_e{=}4,\,w_v{=}0.02$（速度只罚超 0.30 rad/s 部分）,\,$w_a{=}0.005,\,w_f{=}0.01,\,w_c{=}2$（穿透$-$0.5 mm 起算）,
+$c_{\mathrm{time}}{=}0.02,\,g_p{=}2,\,b_{\mathrm{tol}}{=}0.8,\,b_s{=}b_t{=}10,\,p_f{=}2$；相位奖 $r_{\mathrm{phase}}{=}8{+}8\cdot$相位剩余比例。
+\textbf{碰撞不提前终止}（持续惩罚）——历史上"早退自杀"曾被策略利用来逃避时间惩罚。
+
+\begin{keybox}
+\textbf{残差动作设计（v3 核心修复）}：动作不直接给目标，而是
+\code{指令 = 归一化(目标先验 + 0.3×PPO 残差)}，且每周期限速 0.15 rad。
+零策略即等价于可解的直接基线，PPO 在其上优化"更快+更稳+低压+低穿透"——
+这也是本对比实验所有算法共享的公平起点。
+\end{keybox}
+
+\subsection{观测 / 动作 / 判据速查}
+\begin{table}[h]\centering
+\caption{两任务 MDP 规格对照}\label{tab:mdp}
+\begin{tabular}{lll}
+\toprule
+ & 任务一 free & 任务二 seq \\
+\midrule
+观测 & 80 = 16$\times$5 块 & 84 = 80 + 相位 one-hot 3 + 进度 1 \\
+动作 & 16 维 $\in[-1,1]$（残差） & 同左 \\
+回合上限 & 2.5 s（125 步） & 6.0 s（300 步） \\
+成功 & 误差+速度达标 且 穿透$\le$1 mm 保持 3 步 & 三相位全部验收 \\
+关键指标 & 成功率 / 到位时间 / 最大穿透 & 成功率 / 序列总时 / 三相位分解 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{16 篇论文先进性分类}
+本工程从 70 篇方法总表（\code{PPO-方法总表.html}）中选取 16 篇，分四组进入"先进性阶梯"：
+
+\begin{center}
+\begin{tikzpicture}[
+  lvl/.style={draw=keygreen,fill=soft,rounded corners=2pt,align=center,inner sep=4pt,font=\scriptsize},
+  grp/.style={rounded corners=2pt,align=center,inner sep=5pt,font=\small\bfseries},
+  arrow/.style={-{Stealth[length=2.5mm]},thick,dashed}]
+  \node[grp,draw,fill=keygreen!12,text=keygreen] (g1) at (0,0) {A 基础与复现\\01 TRPO \textbullet{} 02 GAE \textbullet{} 03 PPO\\04 Impl-Matters \textbullet{} 05 OnPolicy-AC};
+  \node[grp,draw,fill=blue!8,text=blue!60!black] (g2) at (8.3,1.5) {B PPO 算法改进\\06 TR-PPO-RB \textbullet{} 07 ESPO\\08 PPG \textbullet{} 25 ExO-PPO \textbullet{} 26 OPPO};
+  \node[grp,draw,fill=orange!10,text=orange!70!black] (g3) at (8.3,-1.5) {C 环境奖励与探索\\09 PBRS \textbullet{} 10 Human-Pref \textbullet{} 11 RND\\12 Eureka \textbullet{} 13 TWTL \textbullet{} 27 Improve-RM};
+  \node[grp,draw,fill=purple!8,text=purple!70!black] (g4) at (16,0) {D 落地参照\\31 TD3 \textbullet{} 32 SAC \textbullet{} 56 ANYmal\\55 RMA \textbullet{} 62 RL-100};
+  \draw[arrow] (g1)--(g2); \draw[arrow] (g1)--(g3);
+  \draw[arrow] (g2)--(g4); \draw[arrow] (g3)--(g4);
+\end{tikzpicture}
+\end{center}
+
+\begin{longtable}{p{3.2cm}p{2.2cm}p{7.2cm}p{2.6cm}}
+\caption{16 篇入选论文与本项目角色}\\
+\toprule
+论文 & 训练类型 & 核心机制（精读结论） & 本项目角色 \\
+\midrule
+\endfirsthead
+\toprule
+论文 & 训练类型 & 核心机制 & 角色 \\
+\midrule
+\endhead
+01 TRPO & 基础与复现 & 旧策略轨迹上估计优势；样本平均 KL 约束 + 共轭梯度 + 回溯线搜索 & \textbf{基线 trpo（实跑，CG+线搜）} \\
+02 GAE & 基础与复现 & $\delta_t$ 按 $(\gamma\lambda)^l$ 衰减求和；$\lambda{\in}[0.92,0.98]$ 最快 & 全体 PPO 优势估计 \\
+03 PPO & 基础与复现 & $\min(\rho\hat A,\mathrm{clip}(\rho)\hat A)$；$\varepsilon{=}0.2$ 得 0.82 归一分 & \textbf{基线（实跑）} \\
+— PPO-KL & PPO 变体 & 自适应 KL 惩罚 $\rho\hat A-\beta\,\mathrm{KL}$；$\beta$ 随 KL 出 $[0.5,1.5]\times$目标 倍增/减半 & \textbf{变体 ppo\_kl（实跑）} \\
+57 ACER & 连续控制 & 截断重要性比率 + Retrace + 回放纠偏；SB3 实现仅离散动作 & 分类引用（离散对照，见跨研究表） \\
+04 Impl-Matters & 基础与复现 & 16 组实现开关：初始化/奖励尺度/归一化贡献 17--21\% & 公平实验协议来源 \\
+05 OnPolicy-AC & 基础与复现 & 25 万 agent 扫 50+ 设计选择；裁剪是强基线 & 公平实验协议来源 \\
+06 TR-PPO-RB & PPO 改进 & 越界反向斜率 rollback；逐状态 KL 触发 & \textbf{变体 ppo\_rb（实跑）} \\
+07 ESPO & PPO 改进 & 优化未裁剪目标 + 漂移阈值 0.25 早停（优于 KL 0.01/0.05） & \textbf{变体 ppo\_espo（实跑）} \\
+08 PPG & PPO 改进 & 策略/价值相位分离 + 辅助阶段价值蒸馏 + KL 锚 & \textbf{变体 ppo\_pg（实跑）} \\
+25 ExO-PPO & PPO 改进 & 扩展离策略下界；越界梯度随偏移平滑压缩不归零 & \textbf{变体 ppo\_exo（实跑）} \\
+26 OPPO & PPO 改进 & 生成/打分重叠 + 超额调度；多节点步延迟 4.49$\times$ & 系统组（定性引用，不实跑：无 LLM 服务环） \\
+09 PBRS & 奖励与探索 & $+\gamma\Phi(s'){-}\Phi(s)$ 势能抵消保持策略不变 & \textbf{变体 ppo\_pbrs（实跑）} \\
+10 Human-Pref & 奖励与探索 & 片段偏好训奖励模型集成；$\sim$700 对逼真奖励 & 分类引用（需人标） \\
+11 RND & 奖励与探索 & 固定随机目标网 + 预测误差内在奖励；双价值头 & \textbf{变体 ppo\_rnd（实跑，单头简化）} \\
+12 Eureka & 奖励与探索 & LLM 采样可执行奖励 + GPU 并行评价 + 迭代 & 分类引用（留作扩展位） \\
+13 TWTL & 奖励与探索 & 时序逻辑塑形 + 离线策略混合 & 分类引用（任务二天然分段） \\
+27 Improve-RM & 奖励与探索 & OOD 检测 + KL 邻域探索主动收集偏好 & 分类引用（需人标） \\
+\bottomrule
+\end{longtable}
+
+\subsection{跨研究对照（RLP 基准）}
+同源方法在姊妹仓 Reinforcement-Learning-Policy 的自有基准上另有三列评测（E1/E2/E3）：
+PPG 0.669$\pm$0.02/0.681/1.000$\pm$0.00，PPO-KL 0.658/0.785/0.992，PPO-RB 0.655/0.669/0.995，
+PPO-Clip 0.652/0.620/0.996（E2 种子散布 $\pm$0.17），ESPO 0.648/0.755/0.568，TR-PPO-RB 0.625/0.754/0.694，
+TRPO E3=1.000 真值（代价为 CG+线搜开销）；ACER 为离散对照。两基准任务不同，数值不可直接横比，仅作方法族参照。
+
+\subsection{三种基线算法一页纸}
+\begin{table}[h]\centering\small
+\caption{TD3 / SAC / PPO 要点（连续控制三族）}\label{tab:three}
+\begin{tabular}{p{2.4cm}p{4.4cm}p{4.4cm}p{3.4cm}}
+\toprule
+ & TD3（2018） & SAC（2018） & PPO（2017） \\
+\midrule
+类别 & 离策略确定性 AC & 离策略最大熵随机 AC & 在策略随机 PG \\
+核心 & 双 Q 取小防过估 + 目标策略平滑 + 延迟 actor & 熵正则 + 双 Q + 自动温度 & 裁剪重要性比 + GAE + 多轮小批更新 \\
+探索 & 外加截断噪声 & 熵驱动内生探索 & 高斯策略采样 \\
+样本效率 & 高（大回放） & 高 & 低（数据一次性） \\
+本工程超参 & lr 1e-3, batch 256, 噪声 0.1, 延迟 2 & lr 3e-4, batch 256, 目标熵 $-16$ & lr 3e-4, 8$\times$256 步/批, 10 轮 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{PPO 变体目标函数几何对比}
+
+\begin{center}
+\begin{tikzpicture}
+\begin{axis}[width=13.5cm,height=6.4cm,xlabel={$\rho=\pi_\theta(a|s)/\pi_{old}(a|s)$},
+  ylabel={每样本目标（$\hat A=1$ 归一）},legend style={font=\scriptsize,at={(0.02,0.98)},anchor=north west},
+  domain=0.5:1.7,samples=200,grid=both,grid style={gray!18},xmin=0.5,xmax=1.7,ymin=-0.05,ymax=1.75,
+  xtick={0.8,1.0,1.2,1.333,1.5}]
+  \addplot[thick,keygreen]{min(x,1.2)};
+  \addlegendentry{PPO-Clip $\varepsilon{=}0.2$（越界梯度=0）}
+  \addplot[thick,warn,dashed]{x - 1.5*max(x-1.2,0)};
+  \addlegendentry{TR-PPO-RB（越界反向斜率拉回）}
+  \addplot[thick,blue,domain=0.5:1.7,samples=400] {x <= 1.2 ? x : 1.2 + 0.2*tanh((x-1.2)/0.2)};
+  \addlegendentry{ExO 平滑压缩（梯度衰减不为 0）}
+\end{axis}
+\end{tikzpicture}
+\end{center}
+
+\subsection{对比实验设计（公平协议，源自 04/05 两篇方法论）}
+\begin{itemize}
+  \item \textbf{矩阵}：2 任务 $\times$ 11 算法（含 TRPO 与 PPO-KL） \{$\,$ppo, trpo, ppo\_kl, td3, sac, ppo\_rb, ppo\_espo, ppo\_ppg, ppo\_exo, ppo\_pbrs, ppo\_rnd$\,$\} $\times$ 3 种子；
+  \item \textbf{预算}：每跑 150k 环境步；同一 MuJoCo 模型与目标文件（SHA-256 入档 \code{config.json}）；
+        网络统一 256$\times$256（PPG 因需共享主干同样 256$\times$256 共享）；
+  \item \textbf{评估}：训练后固定 25 个评估种子（7001--7025）确定性策略复测；成功率/到位或序列时间/穿透为硬指标；
+  \item \textbf{训练曲线}：Monitor 逐集日志（\code{episodes.csv}）+ PPO 诊断（比率均值/最大值、clip 率、近似 KL、
+        ESPO 停止轮、PPG 辅助损失，\code{ppo\_diagnostics.json}）；
+  \item \textbf{实现披露}：TR-PPO-RB 的逐状态 KL 用 $|\log\rho|$ 代理（SB3 不存旧分布参数）；
+        RND 为单价值头简化版；ExO 用 tanh 软饱和复现"平滑压缩"精神——三者均写入论文与 README 偏差声明。
+\end{itemize}
+
+\subsection{复现命令}
+\begin{lstlisting}[language=bash]
+cd Aitachi-Hand
+bash scripts/smoke_all.sh                                   # 13 条路径冒烟
+bash scripts/run_matrix_all.sh                              # 全矩阵 54 跑（断点续跑）
+python scripts/aggregate.py --results results               # 汇总 summary.csv/json
+python scripts/make_figures.py --results results --out figures   # 12 张对比图
+\end{lstlisting}

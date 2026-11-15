@@ -1,0 +1,78 @@
+\section{仿真教程（二）：Isaac Sim / Isaac Lab（Ubuntu·WSL）}
+
+\subsection{数据流与路径}
+\begin{center}
+\begin{tikzpicture}[node distance=7mm,
+  box/.style={draw=keygreen,fill=soft,rounded corners=2pt,align=center,inner sep=5pt,font=\small},
+  arrow/.style={-{Stealth[length=2.5mm]},thick}]
+  \node[box] (urdf) {URDF / STL\\原始资产};
+  \node[box,right=of urdf] (usd) {物理 USD\\固定底座+17 关节};
+  \node[box,right=of usd] (lab) {Isaac Lab\\CUDA PhysX + 测量 JSON};
+  \node[box,right=of lab] (play) {FFplay / USDA\\轨迹回放导出};
+  \draw[arrow] (urdf)--(usd); \draw[arrow] (usd)--(lab); \draw[arrow] (lab)--(play);
+\end{tikzpicture}
+\end{center}
+
+\begin{itemize}
+  \item 项目目录（WSL 视角）：\code{/mnt/c/Users/ASUS/Desktop/AHand}；
+        原始模型 \code{1028/orcahand\_description/v2}，物理资产 \code{gpu-validation/usd}，
+        圆棍场景 \code{gpu-validation/stick-grasp}；
+  \item Isaac Python：\code{\$HOME/isaac\_sim/venv/bin/python}；Kit 配置：\code{ubuntu-validation/isaac\_physics.kit}；
+  \item 硬件：RTX 3070 Laptop（CUDA 可用）；WSL Vulkan 仅 llvmpipe $\Rightarrow$ \textbf{走无界面求解 + 本地工具回放}。
+\end{itemize}
+
+\subsection{启动与依赖自检（整块可复制）}
+\begin{lstlisting}[language=bash]
+(
+export AHAND_ROOT=/mnt/c/Users/ASUS/Desktop/AHand/gpu-validation
+export AHAND_PY="$HOME/isaac_sim/venv/bin/python"
+export OMNI_KIT_ACCEPT_EULA=YES
+cd "$AHAND_ROOT" || exit 1
+mkdir -p logs stick-grasp/runs || exit 1
+/usr/lib/wsl/lib/nvidia-smi -L
+test -x "$AHAND_PY" && echo "Isaac Python exists"
+test -f usd/right/orca_right.usd && test -f usd/left/orca_left.usd && echo "Both USD assets exist"
+)
+\end{lstlisting}
+
+\subsection{加载物理模型（左右手 GPU 动力学测试）}
+\begin{lstlisting}[language=bash]
+cd "$AHAND_ROOT"
+bash ./run_isaac_orca_wsl.sh
+\end{lstlisting}
+成功标记：\code{ORCA\_ISAAC\_GPU\_DYNAMICS device=cuda:0} 与左右手各一条 \code{ORCA\_ISAAC\_OK}。
+已验证结论：左右手各 17 关节在 CUDA PhysX 上通过 600 步测试，最大回位误差 0.01783 rad。
+URDF 重新导入（按需）：URDF importer 启动后 2 分钟未产出即终止复测，实验请直接用已实测通过的 USD。
+
+\subsection{圆棍交接主实验}
+\begin{lstlisting}[language=bash]
+cd "$AHAND_ROOT"
+bash ./run_isaac_cylinder_handoff_wsl.sh      # 圆柱交接
+bash ./run_isaac_stick_grasp_wsl.sh           # 圆棍抓取
+tail -n 35 logs/handoff-latest.log            # 运行中另开终端看日志
+\end{lstlisting}
+当前实测：圆棍完成两次摇摆，抬升约 17.00 mm，摇摆最大漂移约 7.97 mm（超出验收 $\Rightarrow$ 记失败态），
+保存 455 帧轨迹 JSON。该任务留作 Isaac 侧进阶练习。
+
+\subsection{回放与导出}
+\begin{lstlisting}[language=bash]
+cd "$AHAND_ROOT"
+OPENBLAS_NUM_THREADS=1 "$AHAND_PY" stick-grasp/render_ubuntu_handoff.py \
+  --track stick-grasp/pad-sway-cushion.json \
+  --output stick-grasp/Ubuntu-ORCA-Handoff.mp4 &&
+ffplay -autoexit stick-grasp/Ubuntu-ORCA-Handoff.mp4     # 空格暂停/Q 退出
+
+OPENBLAS_NUM_THREADS=1 "$AHAND_PY" stick-grasp/export_native_usd.py \
+  --track stick-grasp/pad-sway-cushion.json \
+  --output stick-grasp/Ubuntu-ORCA-Handoff.usda          # 导出 USDA
+\end{lstlisting}
+
+\subsection{实机 A/B 与仿真对照（网页教程专属能力）}
+确认版教程 \code{AHand-IsaacSim-IsaacLab-Ubuntu-确认版.html} 的 \#hardware 节内嵌实机 A/B 历史串口采样：
+按钮切换动作、下拉选轴，离线绘制该轴 raw 位置曲线（虚线=目标）、电流/负载/温度读数，
+并有"位置目标 vs 旧标定区间"越界复核表——它是把仿真角度对齐到实机编码的日常工具。
+
+\begin{keybox}
+\textbf{口径提醒}：MuJoCo 的 V/OK 用模型关节目标做主实验；Isaac Lab 当前主线是圆棍交接。
+两条仿真线共享同一 USD/MJCF 几何，但物理引擎与接触参数不同，跨引擎结论须分别验证。
+\end{keybox}

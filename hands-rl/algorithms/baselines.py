@@ -63,6 +63,7 @@ TRPO_HPARAMS = dict(
     cg_max_steps=10,
     cg_damping=0.1,
     policy_net=[256, 256],
+    log_std_init=0.0,   # sb3-contrib default; attribution ablation overrides to -1.5
 )
 
 
@@ -119,6 +120,7 @@ def make_trpo(env, seed: int, hparams=None, device="auto"):
         batch_size=hp["batch_size"], gamma=hp["gamma"],
         gae_lambda=hp["gae_lambda"], target_kl=hp["target_kl"],
         cg_max_steps=hp["cg_max_steps"], cg_damping=hp["cg_damping"],
-        policy_kwargs={"net_arch": {"pi": hp["policy_net"], "vf": hp["policy_net"]}},
+        policy_kwargs={"net_arch": {"pi": hp["policy_net"], "vf": hp["policy_net"]},
+                        "log_std_init": float(hp.get("log_std_init", 0.0))},
         seed=seed, verbose=0, device=device,
     )

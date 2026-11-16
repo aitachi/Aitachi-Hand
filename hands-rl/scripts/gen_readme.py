@@ -427,6 +427,54 @@ def render_figures(lang):
     return "\n".join(parts)
 
 
+ATTR_TABLE = (
+    "| Evidence | Result | Verdict |\n"
+    "|---|---|---|\n"
+    "| TRPO drift (default init, 10k-500k, 2 seeds free + seq) | 0.000 at every checkpoint | budget & slow-drift hypotheses refuted |\n"
+    "| TRPO 500k final (3.3x budget) | 0.000 free & seq | not a budget limitation |\n"
+    "| TRPO matched-init (log_std=-1.5) free | 0.80 @10k -> 0.36 -> 0.04 | exploration-scale mismatch destroys the prior; CG updates then erode it |\n"
+    "| TRPO matched-init seq | 0.000 at all checkpoints | structural failure under 3-phase hold criteria |\n"
+    "| RND lambda 0.5 vs 0.05 (both tasks) | 0.000 across the board | direction conflict (intrinsic novelty vs hold-window), not scale |\n"
+)
+
+ATTR_TABLE_ZH = (
+    "| 证据 | 结果 | 判定 |\n"
+    "|---|---|---|\n"
+    "| TRPO 漂移曲线（默认 init，10k-500k，free×2 种子+seq） | 每个检查点均 0.000 | 预算假说与缓慢漂移假说双双否证 |\n"
+    "| TRPO 500k 终评（3.3 倍预算） | free/seq 均 0.000 | 非预算限制 |\n"
+    "| TRPO 匹配 init（log_std=-1.5）free | 0.80@10k → 0.36 → 0.04 | 探索尺度失配摧毁先验；CG 更新继而侵蚀 |\n"
+    "| TRPO 匹配 init seq | 全检查点 0.000 | 三相位保持判据下结构性失败 |\n"
+    "| RND λ=0.5 vs 0.05（双任务） | 全 0.000 | 方向冲突（新颖性 vs 保持窗），非尺度问题 |\n"
+)
+
+ATTR_VERDICT_EN = (
+    "**Verdict**: TRPO's failure is a two-stage mismatch - (1) default exploration scale "
+    "(log_std_init=0, 4.7x the PPO family's) destroys the solvable residual prior within "
+    "10k steps and never recovers; (2) even with matched init on Task 1, conservative "
+    "CG+line-search updates erode a rescued 0.80 down to 0.04 - the zero-policy prior is "
+    "near-optimal and TRPO's improvement steps actively hurt it. On Task 2 TRPO fails "
+    "structurally regardless of init. RND's negative result is a direction conflict: the "
+    "single-value-head simplification lets novelty reward fight the hold-window criteria "
+    "at any weight. Full curves: fig14; data: hands-rl/results_attribution/.")
+
+ATTR_VERDICT_ZH = (
+    "**判定**：TRPO 失败是两阶段失配——（1）默认探索尺度（log_std_init=0，为 PPO 族的 4.7 倍）"
+    "在 1 万步内摧毁可解残差先验且永不恢复；（2）任务一即便匹配 init 救回 0.80，保守的 CG+线搜"
+    "更新仍将其侵蚀至 0.04——零策略先验本已近优，TRPO 的每一步“改进”都在损害它；任务二则无论 "
+    "init 均结构性失败。RND 负结果为方向冲突：单价值头简化下，新颖性内在奖励在任何权重下都与"
+    "保持窗判据对抗。完整曲线见 fig14；数据在 hands-rl/results_attribution/。")
+
+
+def render_attr(lang):
+    zh = lang == "zh"
+    head = ("### Negative-Result Attribution (7-run follow-up)" if not zh
+            else "### 负结果归因（7 跑追试）")
+    table = ATTR_TABLE_ZH if zh else ATTR_TABLE
+    verdict = ATTR_VERDICT_ZH if zh else ATTR_VERDICT_EN
+    return "\n".join([head, "", table, "", verdict, "",
+                      "![attribution](figures/fig14_attribution.png)", ""])
+
+
 def render(lang: str, summary, n_runs: int) -> str:
     L = LANGS[lang]
     zh = lang == "zh"
@@ -449,6 +497,7 @@ def render(lang: str, summary, n_runs: int) -> str:
                else "### 对比图集（13 张）"), "", render_figures(lang)]
     out += [L["protocol_head"], L["protocol"], ""]
     out += [L["deviations_head"], L["deviations"], ""]
+    out += [render_attr(lang)]
     out += [render_cross(L)]
     out += [L["quick"], REPRO[lang], "", L["assets"], ""]
     out += [L["limits_head"], L["limits"], ""]

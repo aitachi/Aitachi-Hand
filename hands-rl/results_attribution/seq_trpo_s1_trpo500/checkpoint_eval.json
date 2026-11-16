@@ -1,0 +1,52 @@
+{
+  "10000": {
+    "episodes": 25,
+    "success_rate": 0.0,
+    "mean_finish_time": null,
+    "std_finish_time": null,
+    "mean_reward": -19.201778789742256,
+    "mean_max_penetration_mm": 0.0,
+    "max_penetration_mm": 0.0,
+    "checkpoint": 10000
+  },
+  "50000": {
+    "episodes": 25,
+    "success_rate": 0.0,
+    "mean_finish_time": null,
+    "std_finish_time": null,
+    "mean_reward": -27.809283860565223,
+    "mean_max_penetration_mm": 0.0,
+    "max_penetration_mm": 0.0,
+    "checkpoint": 50000
+  },
+  "150000": {
+    "episodes": 25,
+    "success_rate": 0.0,
+    "mean_finish_time": null,
+    "std_finish_time": null,
+    "mean_reward": -21.347055999028413,
+    "mean_max_penetration_mm": 0.07820718305834391,
+    "max_penetration_mm": 0.6684897855346091,
+    "checkpoint": 150000
+  },
+  "300000": {
+    "episodes": 25,
+    "success_rate": 0.0,
+    "mean_finish_time": null,
+    "std_finish_time": null,
+    "mean_reward": -21.132609335933125,
+    "mean_max_penetration_mm": 0.0,
+    "max_penetration_mm": 0.0,
+    "checkpoint": 300000
+  },
+  "500000": {
+    "episodes": 25,
+    "success_rate": 0.0,
+    "mean_finish_time": null,
+    "std_finish_time": null,
+    "mean_reward": -21.43121833864448,
+    "mean_max_penetration_mm": 0.0,
+    "max_penetration_mm": 0.0,
+    "checkpoint": 500000
+  }
+}

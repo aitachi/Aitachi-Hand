@@ -139,6 +139,21 @@
 5. PBRS はタイムアウト終端でポテンシャル補正なし。
 6. **TD3/SAC**: 4ステップごとに4更新（UTD 1:1 は原論文同様）。
 
+### Negative-Result Attribution (7-run follow-up)
+
+| Evidence | Result | Verdict |
+|---|---|---|
+| TRPO drift (default init, 10k-500k, 2 seeds free + seq) | 0.000 at every checkpoint | budget & slow-drift hypotheses refuted |
+| TRPO 500k final (3.3x budget) | 0.000 free & seq | not a budget limitation |
+| TRPO matched-init (log_std=-1.5) free | 0.80 @10k -> 0.36 -> 0.04 | exploration-scale mismatch destroys the prior; CG updates then erode it |
+| TRPO matched-init seq | 0.000 at all checkpoints | structural failure under 3-phase hold criteria |
+| RND lambda 0.5 vs 0.05 (both tasks) | 0.000 across the board | direction conflict (intrinsic novelty vs hold-window), not scale |
+
+
+**Verdict**: TRPO's failure is a two-stage mismatch - (1) default exploration scale (log_std_init=0, 4.7x the PPO family's) destroys the solvable residual prior within 10k steps and never recovers; (2) even with matched init on Task 1, conservative CG+line-search updates erode a rescued 0.80 down to 0.04 - the zero-policy prior is near-optimal and TRPO's improvement steps actively hurt it. On Task 2 TRPO fails structurally regardless of init. RND's negative result is a direction conflict: the single-value-head simplification lets novelty reward fight the hold-window criteria at any weight. Full curves: fig14; data: hands-rl/results_attribution/.
+
+![attribution](figures/fig14_attribution.png)
+
 ## 他研究との对照（RLP ベンチマーク）
 
 | 手法 | E1 | E2 | E3 | 備考 |

@@ -19,7 +19,7 @@ API_ROOT = "https://api.github.com"
 
 # Files/dirs to publish (relative). Results: summaries only, no checkpoints.
 INCLUDE_DIRS = ["hands-rl/envs", "hands-rl/algorithms", "hands-rl/scripts",
-                 "hands-rl/results", "hands-rl/cross_study.py",
+                 "hands-rl/results", "hands-rl/results_attribution",
                  "hands-sim", "hands-hardware", "textbook", "paper", "figures"]
 INCLUDE_FILES = ["README.md", "README.zh.md", "README.ja.md", "README.ko.md",
                   ".gitignore", "LICENSE", "requirements.txt"]

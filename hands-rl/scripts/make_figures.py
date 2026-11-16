@@ -349,6 +349,49 @@ def main():
     ax.set_title("Cross-study: RLP benchmark (source: RLP report d229af8; ACER discrete-only)", fontsize=9)
     save(fig, "fig13_cross_study")
 
+    # fig14 negative-result attribution (TRPO drift + RND lambda)
+    import json as _json
+    attr_dir = root / "../results_attribution/attribution_summary.json"
+    if attr_dir.is_file():
+        attr = _json.loads(attr_dir.read_text(encoding="utf-8"))
+        fig, axes = _plt2.subplots(1, 2, figsize=(9.6, 3.6))
+        ax = axes[0]
+        styles = {"free_trpo_s1_trpo500": ("#7a4f9e", "-"), "free_trpo_s2_trpo500": ("#9a6fbe", "--"),
+                  "seq_trpo_s1_trpo500": ("#b99ad6", ":")}
+        for name, (c, ls) in styles.items():
+            cur = attr["trpo_default_drift"].get(name)
+            if cur:
+                xs = sorted(int(k) for k in cur)
+                ax.plot(xs, [cur[str(x)] for x in xs], color=c, ls=ls, marker="o", ms=3,
+                        label=name.replace("_trpo", " TRPO").replace("_s", " s").replace("_trpo500", " 500k"))
+        low = attr["trpo_lowstd_drift"].get("free_trpo_s1_trpolowstd")
+        if low:
+            xs = sorted(int(k) for k in low)
+            ax.plot(xs, [low[str(x)] for x in xs], color="#c2571f", marker="s", ms=4,
+                    label="free s1 matched-init (150k)")
+        lowq = attr["trpo_lowstd_drift"].get("seq_trpo_s1_trpolowstd")
+        if lowq:
+            xs = sorted(int(k) for k in lowq)
+            ax.plot(xs, [lowq[str(x)] for x in xs], color="#a05018", ls="--", marker="s", ms=4,
+                    label="seq s1 matched-init (150k)")
+        ax.set_xlabel("checkpoint steps"); ax.set_ylabel("success rate (25-seed det. eval)")
+        ax.set_ylim(-0.03, 1.05); ax.legend(fontsize=6.2, loc="upper right")
+        ax.set_title("TRPO drift curves: default init flat-zero; matched init rescued then eroded", fontsize=8.5)
+        ax = axes[1]
+        labels, vals, cols = [], [], []
+        for task in ("free", "seq"):
+            labels += [task + " λ=0.5", task + " λ=0.05"]
+            m50 = 0.0
+            vals += [m50, attr["rnd_lambda"].get(f"{task}_ppo_rnd_s1_rnd005", 0.0)]
+            cols += ["#b04a6e", "#d98aa5"]
+        ax.bar(range(4), vals, color=cols)
+        ax.axhline(1.0, color="#075f57", ls=":", lw=1)
+        ax.text(3.4, 1.02, "PPO baseline", color="#075f57", fontsize=7)
+        ax.set_xticks(range(4)); ax.set_xticklabels(labels, fontsize=8)
+        ax.set_ylabel("success rate"); ax.set_ylim(0, 1.15)
+        ax.set_title("RND lambda ablation: dual-lambda zeros = direction conflict", fontsize=9)
+        save(fig, "fig14_attribution")
+
     print("ALL_FIGURES_DONE")
 
 

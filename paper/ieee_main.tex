@@ -257,6 +257,26 @@ Hardware: RTX 3070 Laptop, torch 2.11+cu130, SB3 2.9.2, MuJoCo 3.3.7.
 \section{Results and Discussion}\label{sec:results}
 \input{results_auto}
 
+\subsection{Negative-Result Attribution}
+A 7-run follow-up study attributes every zero-score method. TRPO: with the default
+exploration scale (log\,$\sigma_0{=}0$, 4.7$\times$ the PPO family's $-1.5$) the
+success rate is 0.000 at every checkpoint from 10k to 500k steps on both tasks and
+both seeds, refuting budget and slow-drift explanations; a matched-init ablation
+rescues Task 1 at early training (0.80 at 10k) yet conservative CG+line-search
+updates then erode it to 0.04, while Task 2 stays at zero regardless of
+initialization - a structural failure under the three-phase hold criteria. RND:
+halving the intrinsic weight by 10$imes$ ($\lambda$ 0.5$o$0.05) leaves all
+four task/seed combinations at 0.000, indicating a direction conflict (novelty
+reward fighting the hold-window under the single-value-head simplification)
+rather than a scale problem. Curves in Fig.~\ref{fig:attr}; data in
+\code{hands-rl/results\_attribution/}.
+
+\begin{figure}[!t]\centering
+\includegraphics[width=\linewidth]{fig14_attribution.pdf}
+\caption{Attribution: TRPO drift curves (left) and RND $\lambda$ ablation (right).}
+\label{fig:attr}
+\end{figure}
+
 \subsection{Cross-Study Context}
 As external context, Table~\ref{tab:cross} quotes the companion
 Reinforcement-Learning-Policy study (report d229af8) that benchmarks several

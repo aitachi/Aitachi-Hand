@@ -488,6 +488,18 @@ ppo_diagnostics.json（比率/clip/KL/早停/辅助损失）、eval.json + eval_
 <p class="figcap">生成命令：<code>python scripts/aggregate.py &amp;&amp; python scripts/gen_site.py</code></p></div>
 <h2>4 · 12 张对比学术图</h2>
 <div class="card">{fig_html}</div>
+<h2>4b · 负结果归因（7 跑追试）</h2>
+<div class="card">
+<table><thead><tr><th>证据</th><th>结果</th><th>判定</th></tr></thead><tbody>
+<tr><td>TRPO 漂移（默认 init，10k–500k，free×2+seq）</td><td>全检查点 0.000</td><td>预算/缓漂假说否证</td></tr>
+<tr><td>TRPO 500k 终评（3.3× 预算）</td><td>0.000</td><td>非预算限制</td></tr>
+<tr><td>TRPO 匹配 init（−1.5）free</td><td>0.80@10k → 0.36 → 0.04</td><td>探索尺度失配摧毁先验；CG 更新继而侵蚀</td></tr>
+<tr><td>TRPO 匹配 init seq</td><td>全 0.000</td><td>三相位判据下结构性失败</td></tr>
+<tr><td>RND λ=0.5 vs 0.05（双任务）</td><td>全 0.000</td><td>方向冲突（新颖性 vs 保持窗），非尺度</td></tr>
+</tbody></table>
+<img class="fig" src="figs/fig14_attribution.png" alt="attribution">
+<p class="figcap">fig14 · TRPO 漂移曲线 + RND λ 消融（数据：hands-rl/results_attribution/）</p></div>
+
 <h2>5 · 跨研究对照（RLP 基准）</h2>
 <div class="card">
 | 方法 | E1 | E2 | E3 | 注记 |

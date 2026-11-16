@@ -22,7 +22,7 @@ from stable_baselines3.common.callbacks import BaseCallback
 from stable_baselines3.common.monitor import Monitor
 from stable_baselines3.common.vec_env import SubprocVecEnv
 
-sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from algorithms import (PBRSWrapper, RNDRewardWrapper, RNDModule,  # noqa: E402
                         make_ppo, make_ppox, make_sac, make_td3, make_trpo)
 from envs import TASKS  # noqa: E402
@@ -160,9 +160,21 @@ def main():
     parser.add_argument("--out", default="results")
     parser.add_argument("--eval-episodes", type=int, default=25)
     parser.add_argument("--smoke", action="store_true")
+    parser.add_argument("--checkpoint-every", type=int, default=0,
+                        help="save a checkpoint every N steps (attribution runs)")
+    parser.add_argument("--eval-checkpoints", default="",
+                        help="comma-separated step counts: after training, load each "
+                             "checkpoint and run the fixed deterministic evaluation")
+    parser.add_argument("--rnd-weight", type=float, default=None,
+                        help="override RND intrinsic weight (default 0.5) for ablations")
+    parser.add_argument("--trpo-log-std", type=float, default=None,
+                        help="override TRPO log_std_init (attribution ablation)")
+    parser.add_argument("--tag", default="",
+                        help="suffix appended to the run dir name")
     args = parser.parse_args()
 
-    out_dir = Path(args.out) / f"{args.task}_{args.algo}_s{args.seed}"
+    run_name = f"{args.task}_{args.algo}_s{args.seed}" + (f"_{args.tag}" if args.tag else "")
+    out_dir = Path(args.out) / run_name
     out_dir.mkdir(parents=True, exist_ok=True)
     device = "auto"
 
@@ -171,7 +183,9 @@ def main():
         probe = __import__("gymnasium", fromlist=["make"]).make(TASKS[args.task])
         obs_dim = probe.observation_space.shape[0]
         probe.close()
-        rnd_module = RNDModule(obs_dim=int(obs_dim), device=device)
+        weight = args.rnd_weight if args.rnd_weight is not None else 0.5
+        rnd_module = RNDModule(obs_dim=int(obs_dim), device=device,
+                               intrinsic_weight=weight)
     reward_addon = {"ppo_pbrs": "pbrs", "ppo_rnd": "rnd"}.get(args.algo)
 
     onpolicy = args.algo.startswith("ppo")
@@ -181,7 +195,8 @@ def main():
     if args.algo in ("ppo", "ppo_pbrs", "ppo_rnd"):
         model = make_ppo(env, args.seed, device=device)
     elif args.algo == "trpo":
-        model = make_trpo(env, args.seed, device=device)
+        hp = {"log_std_init": args.trpo_log_std} if args.trpo_log_std is not None else None
+        model = make_trpo(env, args.seed, device=device, hparams=hp)
     elif args.algo == "td3":
         model = make_td3(env, args.seed, device=device)
     elif args.algo == "sac":
@@ -194,8 +209,14 @@ def main():
 
     t0 = time.time()
     logger = EpisodeLogger(out_dir / "episodes.csv", rnd=rnd_module)
+    callbacks = [logger]
+    if args.checkpoint_every:
+        from stable_baselines3.common.callbacks import CheckpointCallback
+        callbacks.append(CheckpointCallback(
+            save_freq=max(1, args.checkpoint_every // n_envs),
+            save_path=str(out_dir / "checkpoints"), name_prefix=args.algo, verbose=0))
     try:
-        model.learn(total_timesteps=args.timesteps, callback=logger,
+        model.learn(total_timesteps=args.timesteps, callback=callbacks,
                     progress_bar=False)
     finally:
         env.close()
@@ -204,6 +225,19 @@ def main():
     model.save(out_dir / "final_model")
     if hasattr(model, "export_diagnostics"):
         model.export_diagnostics(out_dir / "ppo_diagnostics.json")
+
+    if args.eval_checkpoints:
+        ckpt_evals = {}
+        for steps in [int(x) for x in args.eval_checkpoints.split(",") if x.strip()]:
+            ckpt_path = out_dir / "checkpoints" / f"{args.algo}_{steps}_steps.zip"
+            if not ckpt_path.is_file():
+                continue
+            loaded = type(model).load(str(ckpt_path), device=model.device)
+            summ, _ = evaluate(loaded, args.task, episodes=args.eval_episodes)
+            summ["checkpoint"] = steps
+            ckpt_evals[str(steps)] = summ
+        (out_dir / "checkpoint_eval.json").write_text(
+            json.dumps(ckpt_evals, indent=2), encoding="utf-8")
 
     eval_summary, eval_rows = evaluate(model, args.task, episodes=args.eval_episodes)
     with (out_dir / "eval_episodes.csv").open("w", encoding="utf-8", newline="") as f:
@@ -220,6 +254,9 @@ def main():
     manifest = {
         "task": args.task, "algo": args.algo, "seed": args.seed,
         "timesteps": args.timesteps, "n_envs": n_envs,
+        "tag": args.tag or None,
+        "rnd_weight": args.rnd_weight,
+        "checkpoint_every": args.checkpoint_every or None,
         "wall_seconds": wall_seconds,
         "python": platform.python_version(),
         "torch": torch.__version__, "sb3": sb3.__version__,

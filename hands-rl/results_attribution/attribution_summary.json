@@ -1,0 +1,46 @@
+{
+  "trpo_default_drift": {
+    "free_trpo_s1_trpo500": {
+      "10000": 0.0,
+      "50000": 0.0,
+      "150000": 0.0,
+      "300000": 0.0,
+      "500000": 0.0
+    },
+    "free_trpo_s2_trpo500": {
+      "10000": 0.0,
+      "50000": 0.0,
+      "150000": 0.0,
+      "300000": 0.0,
+      "500000": 0.0
+    },
+    "seq_trpo_s1_trpo500": {
+      "10000": 0.0,
+      "50000": 0.0,
+      "150000": 0.0,
+      "300000": 0.0,
+      "500000": 0.0
+    }
+  },
+  "trpo_lowstd_drift": {
+    "free_trpo_s1_trpolowstd": {
+      "10000": 0.8,
+      "50000": 0.36,
+      "150000": 0.04
+    },
+    "seq_trpo_s1_trpolowstd": {
+      "10000": 0.0,
+      "50000": 0.0,
+      "150000": 0.0
+    }
+  },
+  "rnd_lambda": {
+    "free_ppo_rnd_s1_rnd005": 0.0,
+    "seq_ppo_rnd_s1_rnd005": 0.0
+  },
+  "conclusions": {
+    "trpo_free": "Exploration-scale mismatch: default log_std_init=0 (4.7x larger noise than PPO family) destroys the solvable residual prior within <10k steps; even 500k (3.3x budget) never recovers (all checkpoints 0.000, 2 seeds). Matched init (-1.5) rescues the start (0.80@10k) but conservative CG updates then erode it (0.80->0.36->0.04).",
+    "trpo_seq": "Structural failure: even with matched init, seq TRPO is 0.000 at every checkpoint — the three-phase hold+geometry criteria amplify any policy-mean error; TRPO cannot preserve the near-optimal zero prior on the sequential task.",
+    "rnd": "Direction conflict, not scale: intrinsic-weight ablation (0.5 vs 0.05, both tasks) yields 0.000 across the board — the single-value-head simplification lets novelty reward structurally fight the hold-window criteria regardless of weight."
+  }
+}

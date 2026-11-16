@@ -118,6 +118,13 @@ PPG 0.669$\pm$0.02/0.681/1.000$\pm$0.00，PPO-KL 0.658/0.785/0.992，PPO-RB 0.65
 PPO-Clip 0.652/0.620/0.996（E2 种子散布 $\pm$0.17），ESPO 0.648/0.755/0.568，TR-PPO-RB 0.625/0.754/0.694，
 TRPO E3=1.000 真值（代价为 CG+线搜开销）；ACER 为离散对照。两基准任务不同，数值不可直接横比，仅作方法族参照。
 
+\subsection{负结果归因（7 跑追试）}
+TRPO 三种子全败的机制已归因：默认探索尺度（$\log\sigma_0{=}0$，为 PPO 族 $-1.5$ 的 4.7 倍）
+在 1 万步内摧毁可解残差先验，10k--500k 全检查点 0.000（预算假说否证）；匹配 init 后任务一
+10k 处 0.80 但被 CG 更新侵蚀至 0.04，任务二无论 init 均结构性失败。RND 在
+$\lambda{=}0.5/0.05$ 双任务四连零——方向冲突（新颖性对抗保持窗）而非尺度问题。
+数据：\code{hands-rl/results\_attribution/}（含漂移曲线 checkpoint\_eval.json 与汇总 json）。
+
 \subsection{三种基线算法一页纸}
 \begin{table}[h]\centering\small
 \caption{TD3 / SAC / PPO 要点（连续控制三族）}\label{tab:three}

@@ -70,6 +70,7 @@ def main():
         cfg = json.loads(cfg_p.read_text(encoding="utf-8"))
         ev = json.loads(eval_p.read_text(encoding="utf-8"))
         auc, steps90 = reward_curve_metrics(run_dir / "episodes.csv")
+        phases = ev.get("mean_phase_times")
         row = {
             "task": cfg["task"], "algo": cfg["algo"], "seed": cfg["seed"],
             "label": ALGO_LABEL.get(cfg["algo"], cfg["algo"]),
@@ -83,6 +84,8 @@ def main():
             "train_auc": auc,
             "steps_to_90": steps90,
         }
+        if cfg["task"] == "seq" and phases:
+            row["phase_v"], row["phase_ok"], row["phase_open"] = (float(x) for x in phases)
         diag_p = run_dir / "ppo_diagnostics.json"
         if diag_p.is_file():
             diag = json.loads(diag_p.read_text(encoding="utf-8"))
@@ -109,7 +112,8 @@ def main():
         entry = {"task": task, "algo": algo, "label": ALGO_LABEL.get(algo, algo), "seeds": len(runs)}
         for key in ("success_rate", "finish_time", "mean_reward", "penetration_mean_mm",
                     "penetration_max_mm", "train_auc", "steps_to_90", "wall_seconds",
-                    "clip_frac", "approx_kl", "ratio_max", "espo_stop_frac", "ppg_aux_kl"):
+                    "clip_frac", "approx_kl", "ratio_max", "espo_stop_frac", "ppg_aux_kl",
+                    "phase_v", "phase_ok", "phase_open"):
             mean, std = agg(key)
             entry[key] = mean
             entry[key + "_std"] = std

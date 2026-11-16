@@ -323,13 +323,130 @@ def render_cross(L):
     ])
 
 
+def _g(L, key, en):
+    """Localized string with English fallback (ja/ko reuse EN for table headers)."""
+    return L.get(key, en)
+
+
+def render_diag_table(summary, L):
+    """Optimizer diagnostics for the PPO family (training tail)."""
+    h_method = _g(L, "m_method", "Method")
+    head = (f"| {h_method} | clip frac | approx KL | max ratio | ESPO stop% | PPG aux KL |")
+    rows = [head, "|---|---|---|---|---|---|"]
+    ppo_family = ["ppo", "trpo", "ppo_kl", "ppo_rb", "ppo_espo", "ppo_ppg",
+                  "ppo_exo", "ppo_pbrs", "ppo_rnd"]
+    for algo in ppo_family:
+        e = next((e for e in summary if e["algo"] == algo and e["task"] == "seq"), None)
+        if not e:
+            continue
+        def f(k, d=4):
+            v = e.get(k)
+            return "--" if v is None or v != v else f"{v:.{d}f}"
+        stop = f("espo_stop_frac", 2)
+        aux = f("ppg_aux_kl", 4)
+        rows.append(f"| {LABEL[algo]} | {f('clip_frac')} | {f('approx_kl')} | {f('ratio_max', 2)} | {stop} | {aux} |")
+    return "\n".join(rows)
+
+
+def render_eff_table(summary, L):
+    """Sample efficiency + wall clock, both tasks."""
+    h_method = _g(L, "m_method", "Method")
+    head = (f"| {h_method} | free: steps→90% | free AUC | free wall | seq: steps→90% | seq AUC | seq wall |")
+    rows = [head, "|---|---|---|---|---|---|---|"]
+    for algo in ORDER:
+        cells = [LABEL[algo]]
+        for task in ("free", "seq"):
+            e = next((e for e in summary if e["algo"] == algo and e["task"] == task), None)
+            if not e:
+                cells += ["--", "--", "--"]
+                continue
+            s90 = e.get("steps_to_90")
+            s90 = f"{int(s90/1000)}k" if s90 else "--"
+            auc = e.get("train_auc")
+            auc = f"{auc:.2f}" if auc is not None and auc == auc else "--"
+            wall = f"{int((e.get('wall_seconds') or 0)/60)}m"
+            cells += [s90, auc, wall]
+        rows.append("| " + " | ".join(cells) + " |")
+    return "\n".join(rows)
+
+
+def render_phase_table(summary, L):
+    """Task-2 per-phase decomposition (successful episodes)."""
+    h_method = _g(L, "m_method", "Method")
+    head = f"| {h_method} | V (s) | OK (s) | OPEN (s) | total (s) |"
+    rows = [head, "|---|---|---|---|---|"]
+    for algo in ORDER:
+        e = next((e for e in summary if e["algo"] == algo and e["task"] == "seq"), None)
+        if not e or e.get("phase_v") is None:
+            continue
+        v, ok, op = e["phase_v"], e["phase_ok"], e["phase_open"]
+        rows.append(f"| {LABEL[algo]} | {v:.2f} | {ok:.2f} | {op:.2f} | {v+ok+op:.2f} |")
+    return "\n".join(rows)
+
+
+FIGURES = [
+    ("fig01_learning_free.png", "Task 1 learning curves (smoothed episode reward, 3 seeds)"),
+    ("fig02_learning_seq.png", "Task 2 learning curves"),
+    ("fig03_final_success.png", "Final success rate (deterministic 25-seed eval, mean±σ)"),
+    ("fig04_finish_time.png", "Arrival / sequence time"),
+    ("fig05_sample_efficiency.png", "Sample efficiency: steps to 90% of final training reward"),
+    ("fig06_ppo_diagnostics.png", "PPO-family optimizer diagnostics (clip/KL/ratio/AUC)"),
+    ("fig07_espo_stopping.png", "ESPO early stopping: KL trace + stop-epoch histogram"),
+    ("fig08_reward_group.png", "Reward-shaping group (PBRS/RND vs PPO) + RND intrinsic tail"),
+    ("fig09_eval_box.png", "Evaluation time distributions (box plots)"),
+    ("fig10_phase_decomposition.png", "Task-2 per-phase time decomposition (V/OK/OPEN)"),
+    ("fig11_wallclock.png", "Wall-clock efficiency: final success vs training time"),
+    ("fig12_safety_penetration.png", "Safety proxy: max self-penetration during evaluation"),
+    ("fig13_cross_study.png", "Cross-study comparison (RLP benchmark, static data)"),
+]
+
+FIG_CAPTIONS_ZH = {
+    "fig01_learning_free.png": "任务一学习曲线（平滑回合奖励，3 种子）",
+    "fig02_learning_seq.png": "任务二学习曲线",
+    "fig03_final_success.png": "最终成功率（确定性 25 种子评估，均值±σ）",
+    "fig04_finish_time.png": "到位/序列时间对比",
+    "fig05_sample_efficiency.png": "样本效率：达到最终训练奖励 90% 所需步数",
+    "fig06_ppo_diagnostics.png": "PPO 族优化器诊断（clip 率/KL/最大比率/AUC）",
+    "fig07_espo_stopping.png": "ESPO 早停：KL 轨迹与停止轮分布",
+    "fig08_reward_group.png": "奖励塑形组（PBRS/RND 对比 PPO）与 RND 内在量尾部",
+    "fig09_eval_box.png": "评估集时间分布（箱线图）",
+    "fig10_phase_decomposition.png": "任务二相位时间分解（V/OK/OPEN）",
+    "fig11_wallclock.png": "墙钟效率：最终成功率 vs 训练时长",
+    "fig12_safety_penetration.png": "安全代理指标：评估期最大自穿透",
+    "fig13_cross_study.png": "跨研究对比（RLP 基准，静态数据）",
+}
+
+
+def render_figures(lang):
+    parts = []
+    for fname, en_cap in FIGURES:
+        cap = FIG_CAPTIONS_ZH.get(fname, en_cap) if lang == "zh" else en_cap
+        parts.append(f"![{cap}](figures/{fname})")
+        parts.append(f"*{cap}*")
+        parts.append("")
+    return "\n".join(parts)
+
+
 def render(lang: str, summary, n_runs: int) -> str:
     L = LANGS[lang]
+    zh = lang == "zh"
     out = [L["title"], "", L["intro"], "", L["nav"], ""]
     out += [L["results_head"] + f" ({n_runs} runs)", ""]
     for task in ("free", "seq"):
         table, best = results_table(summary, task, L)
         out += [L[f"t_{task}"], table, f'*{L["best"]}: **{best}***', ""]
+    # T3 diagnostics
+    out += [_g(L, "diag_head", "### Optimizer Diagnostics (PPO family, Task 2 training tail)" if not zh
+               else "### 优化器诊断（PPO 族，任务二训练尾部）"), "", render_diag_table(summary, L), ""]
+    # T4 efficiency
+    out += [_g(L, "eff_head", "### Sample Efficiency & Wall Clock" if not zh
+               else "### 样本效率与墙钟"), "", render_eff_table(summary, L), ""]
+    # T5 phase decomposition
+    out += [_g(L, "phase_head", "### Task-2 Phase Decomposition (successful episodes)" if not zh
+               else "### 任务二相位分解（成功回合）"), "", render_phase_table(summary, L), ""]
+    # figures gallery
+    out += [_g(L, "figs_head", "### Comparison Figures (13)" if not zh
+               else "### 对比图集（13 张）"), "", render_figures(lang)]
     out += [L["protocol_head"], L["protocol"], ""]
     out += [L["deviations_head"], L["deviations"], ""]
     out += [render_cross(L)]

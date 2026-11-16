@@ -31,7 +31,13 @@
       "espo_stop_frac": null,
       "espo_stop_frac_std": null,
       "ppg_aux_kl": null,
-      "ppg_aux_kl_std": null
+      "ppg_aux_kl_std": null,
+      "phase_v": null,
+      "phase_v_std": null,
+      "phase_ok": null,
+      "phase_ok_std": null,
+      "phase_open": null,
+      "phase_open_std": null
     },
     {
       "task": "free",
@@ -63,7 +69,13 @@
       "espo_stop_frac": null,
       "espo_stop_frac_std": null,
       "ppg_aux_kl": null,
-      "ppg_aux_kl_std": null
+      "ppg_aux_kl_std": null,
+      "phase_v": null,
+      "phase_v_std": null,
+      "phase_ok": null,
+      "phase_ok_std": null,
+      "phase_open": null,
+      "phase_open_std": null
     },
     {
       "task": "free",
@@ -95,7 +107,13 @@
       "espo_stop_frac": 0.0,
       "espo_stop_frac_std": 0.0,
       "ppg_aux_kl": null,
-      "ppg_aux_kl_std": null
+      "ppg_aux_kl_std": null,
+      "phase_v": null,
+      "phase_v_std": null,
+      "phase_ok": null,
+      "phase_ok_std": null,
+      "phase_open": null,
+      "phase_open_std": null
     },
     {
       "task": "free",
@@ -127,7 +145,13 @@
       "espo_stop_frac": null,
       "espo_stop_frac_std": null,
       "ppg_aux_kl": null,
-      "ppg_aux_kl_std": null
+      "ppg_aux_kl_std": null,
+      "phase_v": null,
+      "phase_v_std": null,
+      "phase_ok": null,
+      "phase_ok_std": null,
+      "phase_open": null,
+      "phase_open_std": null
     },
     {
       "task": "free",
@@ -159,7 +183,13 @@
       "espo_stop_frac": null,
       "espo_stop_frac_std": null,
       "ppg_aux_kl": null,
-      "ppg_aux_kl_std": null
+      "ppg_aux_kl_std": null,
+      "phase_v": null,
+      "phase_v_std": null,
+      "phase_ok": null,
+      "phase_ok_std": null,
+      "phase_open": null,
+      "phase_open_std": null
     },
     {
       "task": "free",
@@ -191,7 +221,13 @@
       "espo_stop_frac": 0.0,
       "espo_stop_frac_std": 0.0,
       "ppg_aux_kl": null,
-      "ppg_aux_kl_std": null
+      "ppg_aux_kl_std": null,
+      "phase_v": null,
+      "phase_v_std": null,
+      "phase_ok": null,
+      "phase_ok_std": null,
+      "phase_open": null,
+      "phase_open_std": null
     },
     {
       "task": "free",
@@ -223,7 +259,13 @@
       "espo_stop_frac": 0.5900900900900901,
       "espo_stop_frac_std": 0.006370331362041008,
       "ppg_aux_kl": null,
-      "ppg_aux_kl_std": null
+      "ppg_aux_kl_std": null,
+      "phase_v": null,
+      "phase_v_std": null,
+      "phase_ok": null,
+      "phase_ok_std": null,
+      "phase_open": null,
+      "phase_open_std": null
     },
     {
       "task": "free",
@@ -255,7 +297,13 @@
       "espo_stop_frac": 0.0,
       "espo_stop_frac_std": 0.0,
       "ppg_aux_kl": -0.01779494529600251,
-      "ppg_aux_kl_std": 0.00044292889572300194
+      "ppg_aux_kl_std": 0.00044292889572300194,
+      "phase_v": null,
+      "phase_v_std": null,
+      "phase_ok": null,
+      "phase_ok_std": null,
+      "phase_open": null,
+      "phase_open_std": null
     },
     {
       "task": "free",
@@ -287,7 +335,13 @@
       "espo_stop_frac": 0.0,
       "espo_stop_frac_std": 0.0,
       "ppg_aux_kl": null,
-      "ppg_aux_kl_std": null
+      "ppg_aux_kl_std": null,
+      "phase_v": null,
+      "phase_v_std": null,
+      "phase_ok": null,
+      "phase_ok_std": null,
+      "phase_open": null,
+      "phase_open_std": null
     },
     {
       "task": "free",
@@ -319,7 +373,13 @@
       "espo_stop_frac": null,
       "espo_stop_frac_std": null,
       "ppg_aux_kl": null,
-      "ppg_aux_kl_std": null
+      "ppg_aux_kl_std": null,
+      "phase_v": null,
+      "phase_v_std": null,
+      "phase_ok": null,
+      "phase_ok_std": null,
+      "phase_open": null,
+      "phase_open_std": null
     },
     {
       "task": "free",
@@ -351,7 +411,13 @@
       "espo_stop_frac": null,
       "espo_stop_frac_std": null,
       "ppg_aux_kl": null,
-      "ppg_aux_kl_std": null
+      "ppg_aux_kl_std": null,
+      "phase_v": null,
+      "phase_v_std": null,
+      "phase_ok": null,
+      "phase_ok_std": null,
+      "phase_open": null,
+      "phase_open_std": null
     },
     {
       "task": "seq",
@@ -383,7 +449,13 @@
       "espo_stop_frac": null,
       "espo_stop_frac_std": null,
       "ppg_aux_kl": null,
-      "ppg_aux_kl_std": null
+      "ppg_aux_kl_std": null,
+      "phase_v": 0.43093333333333333,
+      "phase_v_std": 0.008270966623611114,
+      "phase_ok": 0.41333333333333333,
+      "phase_ok_std": 0.00942809041582059,
+      "phase_open": 0.3133333333333333,
+      "phase_open_std": 0.009428090415820642
     },
     {
       "task": "seq",
@@ -415,7 +487,13 @@
       "espo_stop_frac": null,
       "espo_stop_frac_std": null,
       "ppg_aux_kl": null,
-      "ppg_aux_kl_std": null
+      "ppg_aux_kl_std": null,
+      "phase_v": null,
+      "phase_v_std": null,
+      "phase_ok": null,
+      "phase_ok_std": null,
+      "phase_open": null,
+      "phase_open_std": null
     },
     {
       "task": "seq",
@@ -447,7 +525,13 @@
       "espo_stop_frac": 0.0,
       "espo_stop_frac_std": 0.0,
       "ppg_aux_kl": null,
-      "ppg_aux_kl_std": null
+      "ppg_aux_kl_std": null,
+      "phase_v": 0.36000000000000004,
+      "phase_v_std": 5.551115123125783e-17,
+      "phase_ok": 0.36000000000000004,
+      "phase_ok_std": 5.551115123125783e-17,
+      "phase_open": 0.3,
+      "phase_open_std": 0.0
     },
     {
       "task": "seq",
@@ -479,7 +563,13 @@
       "espo_stop_frac": null,
       "espo_stop_frac_std": null,
       "ppg_aux_kl": null,
-      "ppg_aux_kl_std": null
+      "ppg_aux_kl_std": null,
+      "phase_v": 0.5133333333333333,
+      "phase_v_std": 0.049888765156985836,
+      "phase_ok": 0.4000000000000001,
+      "phase_ok_std": 0.03265986323710905,
+      "phase_open": 1.3866666666666667,
+      "phase_open_std": 1.5367787377787632
     },
     {
       "task": "seq",
@@ -511,7 +601,13 @@
       "espo_stop_frac": null,
       "espo_stop_frac_std": null,
       "ppg_aux_kl": null,
-      "ppg_aux_kl_std": null
+      "ppg_aux_kl_std": null,
+      "phase_v": null,
+      "phase_v_std": null,
+      "phase_ok": null,
+      "phase_ok_std": null,
+      "phase_open": null,
+      "phase_open_std": null
     },
     {
       "task": "seq",
@@ -543,7 +639,13 @@
       "espo_stop_frac": 0.0,
       "espo_stop_frac_std": 0.0,
       "ppg_aux_kl": null,
-      "ppg_aux_kl_std": null
+      "ppg_aux_kl_std": null,
+      "phase_v": 0.36000000000000004,
+      "phase_v_std": 5.551115123125783e-17,
+      "phase_ok": 0.36000000000000004,
+      "phase_ok_std": 5.551115123125783e-17,
+      "phase_open": 0.3,
+      "phase_open_std": 0.0
     },
     {
       "task": "seq",
@@ -575,7 +677,13 @@
       "espo_stop_frac": 0.5990990990990991,
       "espo_stop_frac_std": 0.012740662724081964,
       "ppg_aux_kl": null,
-      "ppg_aux_kl_std": null
+      "ppg_aux_kl_std": null,
+      "phase_v": 0.36000000000000004,
+      "phase_v_std": 5.551115123125783e-17,
+      "phase_ok": 0.36000000000000004,
+      "phase_ok_std": 5.551115123125783e-17,
+      "phase_open": 0.3,
+      "phase_open_std": 0.0
     },
     {
       "task": "seq",
@@ -607,7 +715,13 @@
       "espo_stop_frac": 0.0,
       "espo_stop_frac_std": 0.0,
       "ppg_aux_kl": -0.011524439376915796,
-      "ppg_aux_kl_std": 0.00032364685104282353
+      "ppg_aux_kl_std": 0.00032364685104282353,
+      "phase_v": 0.36533333333333334,
+      "phase_v_std": 0.007542472332656513,
+      "phase_ok": 0.36000000000000004,
+      "phase_ok_std": 5.551115123125783e-17,
+      "phase_open": 0.3,
+      "phase_open_std": 0.0
     },
     {
       "task": "seq",
@@ -639,7 +753,13 @@
       "espo_stop_frac": 0.0,
       "espo_stop_frac_std": 0.0,
       "ppg_aux_kl": null,
-      "ppg_aux_kl_std": null
+      "ppg_aux_kl_std": null,
+      "phase_v": 0.36000000000000004,
+      "phase_v_std": 5.551115123125783e-17,
+      "phase_ok": 0.36000000000000004,
+      "phase_ok_std": 5.551115123125783e-17,
+      "phase_open": 0.3,
+      "phase_open_std": 0.0
     },
     {
       "task": "seq",
@@ -671,7 +791,13 @@
       "espo_stop_frac": null,
       "espo_stop_frac_std": null,
       "ppg_aux_kl": null,
-      "ppg_aux_kl_std": null
+      "ppg_aux_kl_std": null,
+      "phase_v": 0.42,
+      "phase_v_std": 0.0,
+      "phase_ok": 0.40666666666666673,
+      "phase_ok_std": 0.00942809041582059,
+      "phase_open": 0.3133333333333333,
+      "phase_open_std": 0.009428090415820642
     },
     {
       "task": "seq",
@@ -703,7 +829,13 @@
       "espo_stop_frac": null,
       "espo_stop_frac_std": null,
       "ppg_aux_kl": null,
-      "ppg_aux_kl_std": null
+      "ppg_aux_kl_std": null,
+      "phase_v": null,
+      "phase_v_std": null,
+      "phase_ok": null,
+      "phase_ok_std": null,
+      "phase_open": null,
+      "phase_open_std": null
     }
   ]
 }

@@ -40,6 +40,90 @@ Language: **English** | [中文](README.zh.md) | [日本語](README.ja.md) | [�
 | RND+PPO | 3 | 0.000±0.000 | -- | 1.07 | 0.91 | 48 |
 *Best (success, then time): **PPO-KL***
 
+### Optimizer Diagnostics (PPO family, Task 2 training tail)
+
+| Method | clip frac | approx KL | max ratio | ESPO stop% | PPG aux KL |
+|---|---|---|---|---|---|
+| PPO | -- | -- | -- | -- | -- |
+| TRPO | -- | -- | -- | -- | -- |
+| PPO-KL | 0.4148 | 15.3896 | 94997.18 | 0.00 | -- |
+| TR-PPO-RB | 0.4148 | 15.3896 | 94997.18 | 0.00 | -- |
+| ESPO | 0.0384 | 0.3054 | 2858.82 | 0.60 | -- |
+| PPG | 0.0002 | 0.0003 | 103.89 | 0.00 | -0.0115 |
+| ExO-PPO | 0.4148 | 15.3896 | 94997.18 | 0.00 | -- |
+| PBRS+PPO | -- | -- | -- | -- | -- |
+| RND+PPO | -- | -- | -- | -- | -- |
+
+### Sample Efficiency & Wall Clock
+
+| Method | free: steps→90% | free AUC | free wall | seq: steps→90% | seq AUC | seq wall |
+|---|---|---|---|---|---|---|
+| PPO | 120k | 0.50 | 6m | 136k | 0.54 | 8m |
+| TRPO | 75k | 0.76 | 37m | 85k | 0.80 | 33m |
+| PPO-KL | 7k | 0.58 | 26m | 16k | 0.57 | 16m |
+| TD3 | 13k | 0.71 | 42m | 20k | 0.96 | 84m |
+| SAC | 101k | 0.67 | 136m | 133k | 0.56 | 86m |
+| TR-PPO-RB | 7k | 0.58 | 7m | 16k | 0.57 | 8m |
+| ESPO | 7k | 0.43 | 11m | 16k | 0.33 | 7m |
+| PPG | 85k | 0.55 | 7m | 35k | 0.54 | 7m |
+| ExO-PPO | 7k | 0.58 | 11m | 16k | 0.57 | 10m |
+| PBRS+PPO | 120k | 0.46 | 12m | 136k | 0.54 | 11m |
+| RND+PPO | 20k | 0.91 | 53m | 28k | 0.91 | 48m |
+
+### Task-2 Phase Decomposition (successful episodes)
+
+| Method | V (s) | OK (s) | OPEN (s) | total (s) |
+|---|---|---|---|---|
+| PPO | 0.43 | 0.41 | 0.31 | 1.16 |
+| PPO-KL | 0.36 | 0.36 | 0.30 | 1.02 |
+| TD3 | 0.51 | 0.40 | 1.39 | 2.30 |
+| TR-PPO-RB | 0.36 | 0.36 | 0.30 | 1.02 |
+| ESPO | 0.36 | 0.36 | 0.30 | 1.02 |
+| PPG | 0.37 | 0.36 | 0.30 | 1.03 |
+| ExO-PPO | 0.36 | 0.36 | 0.30 | 1.02 |
+| PBRS+PPO | 0.42 | 0.41 | 0.31 | 1.14 |
+
+### Comparison Figures (13)
+
+![Task 1 learning curves (smoothed episode reward, 3 seeds)](figures/fig01_learning_free.png)
+*Task 1 learning curves (smoothed episode reward, 3 seeds)*
+
+![Task 2 learning curves](figures/fig02_learning_seq.png)
+*Task 2 learning curves*
+
+![Final success rate (deterministic 25-seed eval, mean±σ)](figures/fig03_final_success.png)
+*Final success rate (deterministic 25-seed eval, mean±σ)*
+
+![Arrival / sequence time](figures/fig04_finish_time.png)
+*Arrival / sequence time*
+
+![Sample efficiency: steps to 90% of final training reward](figures/fig05_sample_efficiency.png)
+*Sample efficiency: steps to 90% of final training reward*
+
+![PPO-family optimizer diagnostics (clip/KL/ratio/AUC)](figures/fig06_ppo_diagnostics.png)
+*PPO-family optimizer diagnostics (clip/KL/ratio/AUC)*
+
+![ESPO early stopping: KL trace + stop-epoch histogram](figures/fig07_espo_stopping.png)
+*ESPO early stopping: KL trace + stop-epoch histogram*
+
+![Reward-shaping group (PBRS/RND vs PPO) + RND intrinsic tail](figures/fig08_reward_group.png)
+*Reward-shaping group (PBRS/RND vs PPO) + RND intrinsic tail*
+
+![Evaluation time distributions (box plots)](figures/fig09_eval_box.png)
+*Evaluation time distributions (box plots)*
+
+![Task-2 per-phase time decomposition (V/OK/OPEN)](figures/fig10_phase_decomposition.png)
+*Task-2 per-phase time decomposition (V/OK/OPEN)*
+
+![Wall-clock efficiency: final success vs training time](figures/fig11_wallclock.png)
+*Wall-clock efficiency: final success vs training time*
+
+![Safety proxy: max self-penetration during evaluation](figures/fig12_safety_penetration.png)
+*Safety proxy: max self-penetration during evaluation*
+
+![Cross-study comparison (RLP benchmark, static data)](figures/fig13_cross_study.png)
+*Cross-study comparison (RLP benchmark, static data)*
+
 ## Experimental Protocol
 - **Matrix**: 2 tasks × 11 methods × 3 seeds = 66 runs, 150 000 environment steps each.
 - **Shared backbone**: residual action `cmd = prior + 0.3·π(s)` with 0.15 rad/cycle rate limit; the zero policy is a solvable direct baseline, so all methods optimize the same correct prior.

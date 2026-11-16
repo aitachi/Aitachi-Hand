@@ -496,6 +496,9 @@ ppo_diagnostics.json（比率/clip/KL/早停/辅助损失）、eval.json + eval_
 <tr><td>TRPO 匹配 init（−1.5）free</td><td>0.80@10k → 0.36 → 0.04</td><td>探索尺度失配摧毁先验；CG 更新继而侵蚀</td></tr>
 <tr><td>TRPO 匹配 init seq</td><td>全 0.000</td><td>三相位判据下结构性失败</td></tr>
 <tr><td>RND λ=0.5 vs 0.05（双任务）</td><td>全 0.000</td><td>方向冲突（新颖性 vs 保持窗），非尺度</td></tr>
+<tr><td>RND 对照 λ=0（双任务）</td><td><b>1.000/1.000</b>（0.30s/1.14s）</td><td>wrapper 无害；剂量-反应锁定病因</td></tr>
+<tr><td>TRPO 匹配 init 三种子（free）</td><td>10k {0.80,1.00,0.84} → 150k {0.04,0.40,0.52}</td><td>救回-再侵蚀三种子复现</td></tr>
+<tr><td>seq SAC 熵消融（−16→−4）</td><td>0.000</td><td>结构性失败：非熵尺度效应</td></tr>
 </tbody></table>
 <img class="fig" src="figs/fig14_attribution.png" alt="attribution">
 <p class="figcap">fig14 · TRPO 漂移曲线 + RND λ 消融（数据：hands-rl/results_attribution/）</p></div>

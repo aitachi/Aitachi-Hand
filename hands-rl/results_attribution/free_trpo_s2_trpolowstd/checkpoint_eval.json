@@ -1,0 +1,32 @@
+{
+  "10000": {
+    "episodes": 25,
+    "success_rate": 1.0,
+    "mean_finish_time": 0.3264,
+    "std_finish_time": 0.04987023160162784,
+    "mean_reward": 19.524195035226416,
+    "mean_max_penetration_mm": 0.0,
+    "max_penetration_mm": 0.0,
+    "checkpoint": 10000
+  },
+  "50000": {
+    "episodes": 25,
+    "success_rate": 0.24,
+    "mean_finish_time": 0.4166666666666667,
+    "std_finish_time": 0.07431165603202651,
+    "mean_reward": 1.0101684933896933,
+    "mean_max_penetration_mm": 0.02868258429252178,
+    "max_penetration_mm": 0.7170646073130446,
+    "checkpoint": 50000
+  },
+  "150000": {
+    "episodes": 25,
+    "success_rate": 0.4,
+    "mean_finish_time": 0.458,
+    "std_finish_time": 0.11399999999999999,
+    "mean_reward": 4.713323464107807,
+    "mean_max_penetration_mm": 0.0,
+    "max_penetration_mm": 0.0,
+    "checkpoint": 150000
+  }
+}

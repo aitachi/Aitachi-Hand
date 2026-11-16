@@ -167,6 +167,8 @@ def main():
                              "checkpoint and run the fixed deterministic evaluation")
     parser.add_argument("--rnd-weight", type=float, default=None,
                         help="override RND intrinsic weight (default 0.5) for ablations")
+    parser.add_argument("--sac-target-entropy", type=float, default=None,
+                        help="override SAC target entropy (attribution ablation)")
     parser.add_argument("--trpo-log-std", type=float, default=None,
                         help="override TRPO log_std_init (attribution ablation)")
     parser.add_argument("--tag", default="",
@@ -200,9 +202,8 @@ def main():
     elif args.algo == "td3":
         model = make_td3(env, args.seed, device=device)
     elif args.algo == "sac":
-        # Measured on this machine: SAC-GPU 2h04m vs SAC-CPU 3h+ (WSL thread
-        # contention) — GPU wins here despite SB3's generic MLP advice.
-        model = make_sac(env, args.seed, device=device)
+        hp = {"target_entropy": args.sac_target_entropy} if args.sac_target_entropy is not None else None
+        model = make_sac(env, args.seed, device=device, hparams=hp)
     else:
         variant = args.algo.replace("ppo_", "")
         model = make_ppox(env, args.seed, variant, device=device)

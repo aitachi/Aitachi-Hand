@@ -99,6 +99,9 @@ def make_td3(env, seed: int, hparams=None, device="auto"):
 
 def make_sac(env, seed: int, hparams=None, device="auto"):
     hp = {**SAC_HPARAMS, **(hparams or {})}
+    extra = {}
+    if hp.get("target_entropy") is not None:
+        extra["target_entropy"] = float(hp["target_entropy"])
     return sb3.SAC(
         "MlpPolicy", env,
         learning_rate=hp["learning_rate"], buffer_size=hp["buffer_size"],
@@ -106,7 +109,7 @@ def make_sac(env, seed: int, hparams=None, device="auto"):
         tau=hp["tau"], gamma=hp["gamma"], train_freq=hp["train_freq"],
         gradient_steps=hp["gradient_steps"],
         policy_kwargs={"net_arch": {"pi": hp["policy_net"], "qf": hp["policy_net"]}},
-        seed=seed, verbose=0, device=device,
+        seed=seed, verbose=0, device=device, **extra,
     )
 
 

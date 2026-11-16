@@ -1,0 +1,9 @@
+{
+  "episodes": 25,
+  "success_rate": 1.0,
+  "mean_finish_time": 0.25520000000000004,
+  "std_finish_time": 0.04605388148679762,
+  "mean_reward": 19.989362318695093,
+  "mean_max_penetration_mm": 0.00425926761406922,
+  "max_penetration_mm": 0.09779034253060333
+}

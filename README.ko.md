@@ -6,20 +6,20 @@
 
 언어: [English](README.md) | [中文](README.zh.md) | [日本語](README.ja.md) | **한국어**
 
-## 결과 (66 runs)
+## 결과 (82 runs)
 
 ### 과제 1 · 자유 자세(5지, 자가충돌 없음)
 | 방법 | 시드 | 성공률 ±σ | 시간 (s) | 관통 (mm) | 보상AUC | 학습시간 (분) |
 |---|---|---|---|---|---|---|
 | PPO | 3 | 1.000±0.000 | 0.31 | 0.02 | 0.50 | 6 |
 | TRPO | 3 | 0.000±0.000 | -- | 0.03 | 0.76 | 37 |
-| PPO-KL ⭐ | 3 | 1.000±0.000 | 0.26 | 0.00 | 0.58 | 26 |
+| PPO-KL ⭐ | 5 | 1.000±0.000 | 0.26 | 0.00 | 0.58 | 17 |
 | TD3 | 3 | 0.333±0.471 | 0.37 | 0.09 | 0.71 | 42 |
 | SAC | 3 | 0.960±0.033 | 0.37 | 0.01 | 0.67 | 136 |
-| TR-PPO-RB | 3 | 1.000±0.000 | 0.26 | 0.00 | 0.58 | 7 |
-| ESPO | 3 | 1.000±0.000 | 0.26 | 0.00 | 0.43 | 11 |
+| TR-PPO-RB | 5 | 1.000±0.000 | 0.26 | 0.00 | 0.58 | 6 |
+| ESPO | 5 | 1.000±0.000 | 0.26 | 0.00 | 0.44 | 8 |
 | PPG | 3 | 1.000±0.000 | 0.26 | 0.01 | 0.55 | 7 |
-| ExO-PPO | 3 | 1.000±0.000 | 0.26 | 0.00 | 0.58 | 11 |
+| ExO-PPO | 5 | 1.000±0.000 | 0.26 | 0.00 | 0.58 | 8 |
 | PBRS+PPO | 3 | 1.000±0.000 | 0.30 | 0.01 | 0.46 | 12 |
 | RND+PPO | 3 | 0.000±0.000 | -- | 0.18 | 0.91 | 53 |
 *최우수(성공률→시간): **PPO-KL***
@@ -29,13 +29,13 @@
 |---|---|---|---|---|---|---|
 | PPO | 3 | 1.000±0.000 | 1.16 | 0.58 | 0.54 | 8 |
 | TRPO | 3 | 0.000±0.000 | -- | 0.06 | 0.80 | 33 |
-| PPO-KL ⭐ | 3 | 1.000±0.000 | 1.02 | 0.75 | 0.57 | 16 |
+| PPO-KL ⭐ | 5 | 1.000±0.000 | 1.02 | 0.75 | 0.57 | 12 |
 | TD3 | 3 | 1.000±0.000 | 2.30 | 1.88 | 0.96 | 84 |
 | SAC | 3 | 0.000±0.000 | -- | 0.37 | 0.56 | 86 |
-| TR-PPO-RB | 3 | 1.000±0.000 | 1.02 | 0.75 | 0.57 | 8 |
-| ESPO | 3 | 1.000±0.000 | 1.02 | 0.75 | 0.33 | 7 |
+| TR-PPO-RB | 5 | 1.000±0.000 | 1.02 | 0.75 | 0.57 | 8 |
+| ESPO | 5 | 1.000±0.000 | 1.02 | 0.75 | 0.34 | 8 |
 | PPG | 3 | 1.000±0.000 | 1.03 | 0.71 | 0.54 | 7 |
-| ExO-PPO | 3 | 1.000±0.000 | 1.02 | 0.75 | 0.57 | 10 |
+| ExO-PPO | 5 | 1.000±0.000 | 1.02 | 0.75 | 0.57 | 9 |
 | PBRS+PPO | 3 | 1.000±0.000 | 1.14 | 0.56 | 0.54 | 11 |
 | RND+PPO | 3 | 0.000±0.000 | -- | 1.07 | 0.91 | 48 |
 *최우수(성공률→시간): **PPO-KL***
@@ -46,11 +46,11 @@
 |---|---|---|---|---|---|
 | PPO | -- | -- | -- | -- | -- |
 | TRPO | -- | -- | -- | -- | -- |
-| PPO-KL | 0.4148 | 15.3896 | 94997.18 | 0.00 | -- |
-| TR-PPO-RB | 0.4148 | 15.3896 | 94997.18 | 0.00 | -- |
-| ESPO | 0.0384 | 0.3054 | 2858.82 | 0.60 | -- |
+| PPO-KL | 0.4151 | 13.2887 | 96216.21 | 0.00 | -- |
+| TR-PPO-RB | 0.4151 | 13.2887 | 96216.21 | 0.00 | -- |
+| ESPO | 0.0405 | 0.3063 | 2584.80 | 0.59 | -- |
 | PPG | 0.0002 | 0.0003 | 103.89 | 0.00 | -0.0115 |
-| ExO-PPO | 0.4148 | 15.3896 | 94997.18 | 0.00 | -- |
+| ExO-PPO | 0.4151 | 13.2887 | 96216.21 | 0.00 | -- |
 | PBRS+PPO | -- | -- | -- | -- | -- |
 | RND+PPO | -- | -- | -- | -- | -- |
 
@@ -60,13 +60,13 @@
 |---|---|---|---|---|---|---|
 | PPO | 120k | 0.50 | 6m | 136k | 0.54 | 8m |
 | TRPO | 75k | 0.76 | 37m | 85k | 0.80 | 33m |
-| PPO-KL | 7k | 0.58 | 26m | 16k | 0.57 | 16m |
+| PPO-KL | 7k | 0.58 | 17m | 16k | 0.57 | 12m |
 | TD3 | 13k | 0.71 | 42m | 20k | 0.96 | 84m |
 | SAC | 101k | 0.67 | 136m | 133k | 0.56 | 86m |
-| TR-PPO-RB | 7k | 0.58 | 7m | 16k | 0.57 | 8m |
-| ESPO | 7k | 0.43 | 11m | 16k | 0.33 | 7m |
+| TR-PPO-RB | 7k | 0.58 | 6m | 16k | 0.57 | 8m |
+| ESPO | 7k | 0.44 | 8m | 16k | 0.34 | 8m |
 | PPG | 85k | 0.55 | 7m | 35k | 0.54 | 7m |
-| ExO-PPO | 7k | 0.58 | 11m | 16k | 0.57 | 10m |
+| ExO-PPO | 7k | 0.58 | 8m | 16k | 0.57 | 9m |
 | PBRS+PPO | 120k | 0.46 | 12m | 136k | 0.54 | 11m |
 | RND+PPO | 20k | 0.91 | 53m | 28k | 0.91 | 48m |
 
@@ -148,6 +148,9 @@
 | TRPO matched-init (log_std=-1.5) free | 0.80 @10k -> 0.36 -> 0.04 | exploration-scale mismatch destroys the prior; CG updates then erode it |
 | TRPO matched-init seq | 0.000 at all checkpoints | structural failure under 3-phase hold criteria |
 | RND lambda 0.5 vs 0.05 (both tasks) | 0.000 across the board | direction conflict (intrinsic novelty vs hold-window), not scale |
+| RND CONTROL lambda=0 (both tasks) | **1.000 / 1.000** (0.30s / 1.14s) | wrapper & backend harmless; dose-response isolates the intrinsic signal |
+| TRPO matched-init, 3 seeds (free) | 10k: {0.80, 1.00, 0.84} -> 150k: {0.04, 0.40, 0.52} | triple-seed replication of rescue-then-erode |
+| seq SAC entropy ablation (-16 -> -4) | 0.000 | structural: not an entropy-scale effect; off-policy bootstrapping vs 3-phase criteria |
 
 
 **Verdict**: TRPO's failure is a two-stage mismatch - (1) default exploration scale (log_std_init=0, 4.7x the PPO family's) destroys the solvable residual prior within 10k steps and never recovers; (2) even with matched init on Task 1, conservative CG+line-search updates erode a rescued 0.80 down to 0.04 - the zero-policy prior is near-optimal and TRPO's improvement steps actively hurt it. On Task 2 TRPO fails structurally regardless of init. RND's negative result is a direction conflict: the single-value-head simplification lets novelty reward fight the hold-window criteria at any weight. Full curves: fig14; data: hands-rl/results_attribution/.

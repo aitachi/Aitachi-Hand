@@ -28,7 +28,27 @@
       "50000": 0.36,
       "150000": 0.04
     },
+    "free_trpo_s2_trpolowstd": {
+      "10000": 1.0,
+      "50000": 0.24,
+      "150000": 0.4
+    },
+    "free_trpo_s3_trpolowstd": {
+      "10000": 0.84,
+      "50000": 0.84,
+      "150000": 0.52
+    },
     "seq_trpo_s1_trpolowstd": {
+      "10000": 0.0,
+      "50000": 0.0,
+      "150000": 0.0
+    },
+    "seq_trpo_s2_trpolowstd": {
+      "10000": 0.0,
+      "50000": 0.0,
+      "150000": 0.0
+    },
+    "seq_trpo_s3_trpolowstd": {
       "10000": 0.0,
       "50000": 0.0,
       "150000": 0.0
@@ -39,8 +59,22 @@
     "seq_ppo_rnd_s1_rnd005": 0.0
   },
   "conclusions": {
-    "trpo_free": "Exploration-scale mismatch: default log_std_init=0 (4.7x larger noise than PPO family) destroys the solvable residual prior within <10k steps; even 500k (3.3x budget) never recovers (all checkpoints 0.000, 2 seeds). Matched init (-1.5) rescues the start (0.80@10k) but conservative CG updates then erode it (0.80->0.36->0.04).",
+    "trpo_free": "Exploration-scale mismatch: default log_std_init=0 (4.7x larger noise than PPO family) destroys the solvable residual prior within <10k steps; even 500k (3.3x budget) never recovers (all checkpoints 0.000, 2 seeds). Matched init (-1.5) rescues the start (0.80@10k) but conservative CG updates then erode it (0.80->0.36->0.04). Triple-seed replication: 10k = {0.80, 1.00, 0.84} -> 150k = {0.04, 0.40, 0.52}.",
     "trpo_seq": "Structural failure: even with matched init, seq TRPO is 0.000 at every checkpoint — the three-phase hold+geometry criteria amplify any policy-mean error; TRPO cannot preserve the near-optimal zero prior on the sequential task.",
-    "rnd": "Direction conflict, not scale: intrinsic-weight ablation (0.5 vs 0.05, both tasks) yields 0.000 across the board — the single-value-head simplification lets novelty reward structurally fight the hold-window criteria regardless of weight."
+    "rnd": "Direction conflict, not scale: intrinsic-weight ablation (0.5 vs 0.05, both tasks) yields 0.000 across the board — the single-value-head simplification lets novelty reward structurally fight the hold-window criteria regardless of weight. CONTROL: lambda=0 recovers 1.000/1.000 (free 0.30s / seq 1.14s) - wrapper and backend are harmless; the dose-response {0:1.0, 0.05:0.0, 0.5:0.0} isolates the intrinsic signal as the sole cause.",
+    "sac_seq": "Structural failure: target-entropy ablation (-16 -> -4) leaves seq SAC at 0.000; not an entropy-scale vs hold-window effect. Off-policy bootstrapping under the three-phase criteria is the mismatch (free SAC 0.96, TD3 1.0 @ 2.3s on seq)."
+  },
+  "rnd_lambda_control": {
+    "free_ppo_rnd_s1_rnd000": 1.0,
+    "free_ppo_rnd_s1_rnd000_time": 0.3,
+    "free_ppo_rnd_s1_rnd005": 0.0,
+    "free_ppo_rnd_s1_rnd005_time": 0,
+    "seq_ppo_rnd_s1_rnd000": 1.0,
+    "seq_ppo_rnd_s1_rnd000_time": 1.14,
+    "seq_ppo_rnd_s1_rnd005": 0.0,
+    "seq_ppo_rnd_s1_rnd005_time": 0
+  },
+  "sac_entropy_ablation": {
+    "seq_sac_s1_sacent4_target_-4": 0.0
   }
 }

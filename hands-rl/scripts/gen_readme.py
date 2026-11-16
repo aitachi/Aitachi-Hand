@@ -435,6 +435,9 @@ ATTR_TABLE = (
     "| TRPO matched-init (log_std=-1.5) free | 0.80 @10k -> 0.36 -> 0.04 | exploration-scale mismatch destroys the prior; CG updates then erode it |\n"
     "| TRPO matched-init seq | 0.000 at all checkpoints | structural failure under 3-phase hold criteria |\n"
     "| RND lambda 0.5 vs 0.05 (both tasks) | 0.000 across the board | direction conflict (intrinsic novelty vs hold-window), not scale |\n"
+    "| RND CONTROL lambda=0 (both tasks) | **1.000 / 1.000** (0.30s / 1.14s) | wrapper & backend harmless; dose-response isolates the intrinsic signal |\n"
+    "| TRPO matched-init, 3 seeds (free) | 10k: {0.80, 1.00, 0.84} -> 150k: {0.04, 0.40, 0.52} | triple-seed replication of rescue-then-erode |\n"
+    "| seq SAC entropy ablation (-16 -> -4) | 0.000 | structural: not an entropy-scale effect; off-policy bootstrapping vs 3-phase criteria |\n"
 )
 
 ATTR_TABLE_ZH = (
@@ -445,6 +448,9 @@ ATTR_TABLE_ZH = (
     "| TRPO 匹配 init（log_std=-1.5）free | 0.80@10k → 0.36 → 0.04 | 探索尺度失配摧毁先验；CG 更新继而侵蚀 |\n"
     "| TRPO 匹配 init seq | 全检查点 0.000 | 三相位保持判据下结构性失败 |\n"
     "| RND λ=0.5 vs 0.05（双任务） | 全 0.000 | 方向冲突（新颖性 vs 保持窗），非尺度问题 |\n"
+    "| RND 对照组 λ=0（双任务） | **1.000 / 1.000**（0.30s / 1.14s） | wrapper 与后端无害；剂量-反应锁定内在信号为唯一病因 |\n"
+    "| TRPO 匹配 init 三种子（free） | 10k：{0.80, 1.00, 0.84} → 150k：{0.04, 0.40, 0.52} | 救回-再侵蚀机制三种子复现 |\n"
+    "| seq SAC 熵消融（−16→−4） | 0.000 | 结构性失败：非熵尺度效应；离策略自举 vs 三相位判据 |\n"
 )
 
 ATTR_VERDICT_EN = (

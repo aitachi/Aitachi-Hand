@@ -265,10 +265,15 @@ both seeds, refuting budget and slow-drift explanations; a matched-init ablation
 rescues Task 1 at early training (0.80 at 10k) yet conservative CG+line-search
 updates then erode it to 0.04, while Task 2 stays at zero regardless of
 initialization - a structural failure under the three-phase hold criteria. RND:
-halving the intrinsic weight by 10$imes$ ($\lambda$ 0.5$o$0.05) leaves all
+halving the intrinsic weight by 10$\times$ ($\lambda$ 0.5$\to$0.05) leaves all
 four task/seed combinations at 0.000, indicating a direction conflict (novelty
 reward fighting the hold-window under the single-value-head simplification)
-rather than a scale problem. Curves in Fig.~\ref{fig:attr}; data in
+rather than a scale problem. A $\lambda{=}0$ control recovers 1.000/1.000 on
+both tasks (0.30\,s / 1.14\,s), and the matched-init rescue replicates across
+three seeds (10k: $\{0.80, 1.00, 0.84\}$ $\to$ 150k: $\{0.04, 0.40, 0.52\}$).
+A seq-SAC entropy ablation ($-16 \to -4$) also stays at 0.000, marking that
+failure structural rather than entropy-scale.
+Curves in Fig.~\ref{fig:attr}; data in
 \code{hands-rl/results\_attribution/}.
 
 \begin{figure}[!t]\centering
